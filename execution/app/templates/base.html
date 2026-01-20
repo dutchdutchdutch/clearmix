@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Clearmix - Peptide reconstitution calculator. Turn confusing mg-to-mL conversions into clear, verified steps.">
+
+    <title>{% block title %}Clearmix{% endblock %} | Mix with Confidence</title>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ECLH0TYVLB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-ECLH0TYVLB');
+
+        // Clearmix custom event tracking helper
+        function trackEvent(eventName, params = {}) {
+            gtag('event', eventName, {
+                'event_category': 'clearmix',
+                'timestamp': new Date().toISOString(),
+                ...params
+            });
+            console.log('📊 Event tracked:', eventName, params);
+        }
+    </script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <div class="app-container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>
