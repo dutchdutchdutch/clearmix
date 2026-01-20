@@ -50,10 +50,13 @@
                     <button type="button" class="preset-btn" data-value="custom">Other</button>
                 </div>
                 <div class="input-with-unit mt-4" id="custom-vial-input" style="display: none;">
-                    <input type="number" class="input input--number" id="vial-mg-custom" placeholder="Enter amount"
-                        min="0.1" step="0.1">
+                    <input type="number" class="input input--number" id="vial-mg-custom" placeholder="5-30 mg" min="0.1"
+                        max="30" step="0.1">
                     <span class="input-with-unit__suffix">mg</span>
                 </div>
+                <!-- Inline alerts for vial amount -->
+                <div class="inline-alert inline-alert--error" id="vial-alert-error"></div>
+                <div class="inline-alert inline-alert--info" id="vial-alert-info"></div>
             </div>
         </section>
 
@@ -77,10 +80,13 @@
                     <button type="button" class="preset-btn" data-value="custom">Other</button>
                 </div>
                 <div class="input-with-unit mt-4" id="custom-water-input" style="display: none;">
-                    <input type="number" class="input input--number" id="diluent-ml-custom" placeholder="Enter amount"
-                        min="0.5" step="0.5">
+                    <input type="number" class="input input--number" id="diluent-ml-custom" placeholder="1-10 mL"
+                        min="1" max="10" step="0.5">
                     <span class="input-with-unit__suffix">mL</span>
                 </div>
+                <!-- Inline alert for water volume -->
+                <div class="inline-alert inline-alert--error" id="water-alert-error"></div>
+                <div class="inline-alert inline-alert--info" id="water-alert-info"></div>
             </div>
 
             <div class="input-group">
@@ -234,6 +240,9 @@
                     <input type="number" class="input input--number" id="dose-mcg" placeholder="250" min="1" step="1">
                     <span class="input-with-unit__suffix">mcg</span>
                 </div>
+                <!-- Inline alerts for dose validation -->
+                <div class="inline-alert inline-alert--info" id="dose-alert-info"></div>
+                <div class="inline-alert inline-alert--warning" id="dose-alert-warning"></div>
             </div>
 
             <div class="input-group">

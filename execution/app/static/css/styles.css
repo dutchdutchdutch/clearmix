@@ -1298,3 +1298,49 @@ body {
     padding: var(--space-3) var(--space-4);
     margin: var(--space-3) 0;
 }
+
+
+/* ================================================================
+   INLINE ALERTS (Input validation feedback)
+   ================================================================ */
+
+.inline-alert {
+    display: none;
+    font-size: var(--text-sm);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--border-radius);
+    margin-top: var(--space-3);
+    line-height: 1.4;
+}
+
+.inline-alert--visible {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+/* Error alert - Red - Blocks calculation */
+.inline-alert--error {
+    color: var(--color-error);
+    background: var(--color-error-bg);
+    border: 1px solid var(--color-error);
+}
+
+/* Warning alert - Orange/Amber - High value caution */
+.inline-alert--warning {
+    color: #f97316;
+    background: rgba(249, 115, 22, 0.1);
+    border: 1px solid rgba(249, 115, 22, 0.4);
+}
+
+/* Info alert - Yellow - Friendly reminder */
+.inline-alert--info {
+    color: var(--color-warning);
+    background: var(--color-warning-bg);
+    border: 1px solid var(--color-warning-border);
+}
+
+/* Input error state */
+.input--error {
+    border-color: var(--color-error) !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}

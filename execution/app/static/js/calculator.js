@@ -30,8 +30,195 @@ const state = {
     numDoses: null,
 
     // UI state
-    currentScreen: 'mixing'
+    currentScreen: 'mixing',
+
+    // Validation state
+    validationErrors: {
+        water: false,
+        dose: false
+    }
 };
+
+// ================================================================
+// INPUT CONSTRAINTS
+// ================================================================
+
+const CONSTRAINTS = {
+    water: {
+        min: 1,
+        max: 10,
+        unit: 'mL'
+    },
+    dose: {
+        min: 1,
+        cautionThreshold: 500,  // Friendly reminder
+        warningThreshold: 1000, // High dose warning
+        unit: 'mcg'
+    },
+    vial: {
+        min: 0.1,          // smallest allowed entry (prevent zero)
+        commonMin: 5,      // typical lower bound
+        commonMax: 10,     // typical upper bound
+        max: 30,           // absolute maximum supported
+        unit: 'mg'
+    }
+};
+
+
+// ================================================================
+// VALIDATION FUNCTIONS
+// ================================================================
+
+/**
+ * Validate water volume input
+ * @param {number} value - The entered water volume
+ * @returns {object} - { valid, correctedValue, alertType, message }
+ */
+function validateWaterVolume(value) {
+    const { min, max } = CONSTRAINTS.water;
+
+    // Clear previous alerts
+    hideAlert('water-alert-error');
+    hideAlert('water-alert-info');
+
+    if (value === null || value === undefined || isNaN(value)) {
+        return { valid: false, correctedValue: null, alertType: null, message: null };
+    }
+
+    // Under minimum (negative or less than 1)
+    if (value < min) {
+        showAlert('water-alert-error', `Water volume must be at least ${min} mL. Setting to ${min} mL.`);
+        state.validationErrors.water = true;
+        return {
+            valid: false,
+            correctedValue: min,
+            alertType: 'error',
+            message: `Water volume must be at least ${min} mL.`
+        };
+    }
+
+    // Over maximum
+    if (value > max) {
+        showAlert('water-alert-info', `${max} mL is the maximum Clearmix supports. Setting to ${max} mL.`);
+        state.validationErrors.water = false; // Info, not error - calculations can proceed
+        return {
+            valid: true,
+            correctedValue: max,
+            alertType: 'info',
+            message: `Maximum is ${max} mL.`
+        };
+    }
+
+    // Valid
+    state.validationErrors.water = false;
+    return { valid: true, correctedValue: value, alertType: null, message: null };
+}
+
+/**
+ * Validate dose input
+ * @param {number} value - The entered dose in mcg
+ * @returns {object} - { valid, alertType, message }
+ */
+function validateDose(value) {
+    const { cautionThreshold, warningThreshold } = CONSTRAINTS.dose;
+
+    // Clear previous alerts
+    hideAlert('dose-alert-info');
+    hideAlert('dose-alert-warning');
+
+    if (value === null || value === undefined || isNaN(value) || value <= 0) {
+        state.validationErrors.dose = false;
+        return { valid: true, alertType: null, message: null };
+    }
+
+    // High dose warning (above 1000 mcg) - Orange warning
+    if (value > warningThreshold) {
+        showAlert('dose-alert-warning', `⚠️ ${value} mcg is a high dosage for those new to self-administering peptides. Please verify with your prescriber.`);
+        state.validationErrors.dose = false; // Warning only, calculations proceed
+        return {
+            valid: true,
+            alertType: 'warning',
+            message: 'High dosage warning'
+        };
+    }
+
+    // Caution threshold (above 500 mcg) - Yellow info
+    if (value > cautionThreshold) {
+        showAlert('dose-alert-info', `💡 Most common peptide doses are up to ${cautionThreshold} mcg. Double-check your prescription if unsure.`);
+        state.validationErrors.dose = false;
+        return {
+            valid: true,
+            alertType: 'info',
+            message: 'Check prescription reminder'
+        };
+    }
+
+    // Valid, no warnings
+    state.validationErrors.dose = false;
+    return { valid: true, alertType: null, message: null };
+}
+
+/**
+ * Validate the amount of peptide in the vial (mg).
+ * Rules:
+ *   - No zero or negative values.
+ *   - 5‑10 mg is the common range – valid with no alert.
+ *   - >10 mg up to 30 mg → info alert asking user to double‑check.
+ *   - >30 mg → error alert, clamp to 30 mg (expert/industrial use).
+ */
+function validateVialAmount(value) {
+    const { min, commonMin, commonMax, max } = CONSTRAINTS.vial;
+    hideAlert('vial-alert-error');
+    hideAlert('vial-alert-info');
+
+    if (value === null || value === undefined || isNaN(value)) {
+        return { valid: false, correctedValue: null, alertType: null, message: null };
+    }
+    const v = Number(value);
+
+    // Non-positive check
+    if (v <= 0) {
+        showAlert('vial-alert-error', `Vial amount must be a positive number.`);
+        return { valid: false, correctedValue: null, alertType: 'error', message: 'Non‑positive vial amount' };
+    }
+
+    // Absolute max check
+    if (v > max) {
+        showAlert('vial-alert-error', `Maximum supported vial amount is ${max} mg. Resetting to ${max} mg.`);
+        return { valid: false, correctedValue: max, alertType: 'error', message: 'Exceeded max vial amount' };
+    }
+
+    // Common range check (above 10mg)
+    if (v > commonMax) {
+        showAlert('vial-alert-info', `Vial amount ${v} mg is above the typical 5‑10 mg range. Please double‑check your prescription.`);
+        return { valid: true, correctedValue: v, alertType: 'info', message: 'Above common range' };
+    }
+
+    // Within common range (5-10mg) or small usage (0.1-5mg) - no alerts
+    return { valid: true, correctedValue: v, alertType: null, message: null };
+}
+
+/**
+ * Show an inline alert
+ */
+function showAlert(elementId, message) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.textContent = message;
+        el.classList.add('inline-alert--visible');
+    }
+}
+
+/**
+ * Hide an inline alert
+ */
+function hideAlert(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.textContent = '';
+        el.classList.remove('inline-alert--visible');
+    }
+}
 
 
 // ================================================================
@@ -338,17 +525,50 @@ function initVialPresets() {
         if (value === 'custom') {
             customInput.style.display = 'flex';
             customField.focus();
-            state.vialMg = parseFloat(customField.value) || null;
+            const entered = parseFloat(customField.value);
+            const validation = validateVialAmount(entered);
+            state.vialMg = validation.correctedValue || null;
         } else {
             customInput.style.display = 'none';
+            // Preset values are safe, clear alerts
+            hideAlert('vial-alert-error');
+            hideAlert('vial-alert-info');
             state.vialMg = parseFloat(value);
         }
         updateMixingUI();
     });
 
     customField.addEventListener('input', (e) => {
-        state.vialMg = parseFloat(e.target.value) || null;
+        const entered = parseFloat(e.target.value);
+        const validation = validateVialAmount(entered);
+
+        if (validation.correctedValue !== null && validation.correctedValue !== entered) {
+            e.target.value = validation.correctedValue;
+            state.vialMg = validation.correctedValue;
+        } else {
+            state.vialMg = entered || null;
+        }
+
+        // Add/remove error style
+        if (validation.alertType === 'error') {
+            e.target.classList.add('input--error');
+        } else {
+            e.target.classList.remove('input--error');
+        }
+
         updateMixingUI();
+    });
+
+    // Validate on blur
+    customField.addEventListener('blur', (e) => {
+        const entered = parseFloat(e.target.value);
+        const validation = validateVialAmount(entered);
+
+        if (validation.correctedValue !== null && validation.correctedValue !== entered) {
+            e.target.value = validation.correctedValue;
+            state.vialMg = validation.correctedValue;
+            updateMixingUI();
+        }
     });
 }
 
@@ -368,17 +588,52 @@ function initWaterPresets() {
         if (value === 'custom') {
             customInput.style.display = 'flex';
             customField.focus();
-            state.diluentMl = parseFloat(customField.value) || null;
+            // Validate current value
+            const enteredValue = parseFloat(customField.value);
+            const validation = validateWaterVolume(enteredValue);
+            state.diluentMl = validation.correctedValue || null;
         } else {
             customInput.style.display = 'none';
+            // Preset values are always valid, clear alerts
+            hideAlert('water-alert-error');
+            hideAlert('water-alert-info');
             state.diluentMl = parseFloat(value);
         }
         updateMixingUI();
     });
 
     customField.addEventListener('input', (e) => {
-        state.diluentMl = parseFloat(e.target.value) || null;
+        const enteredValue = parseFloat(e.target.value);
+        const validation = validateWaterVolume(enteredValue);
+
+        if (validation.correctedValue !== null && validation.correctedValue !== enteredValue) {
+            // Value was corrected - update the input field
+            e.target.value = validation.correctedValue;
+            state.diluentMl = validation.correctedValue;
+        } else {
+            state.diluentMl = enteredValue || null;
+        }
+
+        // Add/remove error class on input
+        if (validation.alertType === 'error') {
+            e.target.classList.add('input--error');
+        } else {
+            e.target.classList.remove('input--error');
+        }
+
         updateMixingUI();
+    });
+
+    // Also validate on blur (when leaving field)
+    customField.addEventListener('blur', (e) => {
+        const enteredValue = parseFloat(e.target.value);
+        const validation = validateWaterVolume(enteredValue);
+
+        if (validation.correctedValue !== null && validation.correctedValue !== enteredValue) {
+            e.target.value = validation.correctedValue;
+            state.diluentMl = validation.correctedValue;
+            updateMixingUI();
+        }
     });
 }
 
@@ -435,7 +690,12 @@ function initDosingSyringePresets() {
 function initDoseInput() {
     const doseInput = document.getElementById('dose-mcg');
     doseInput.addEventListener('input', (e) => {
-        state.doseMcg = parseFloat(e.target.value) || null;
+        const enteredValue = parseFloat(e.target.value);
+        state.doseMcg = enteredValue || null;
+
+        // Validate and show appropriate alerts
+        validateDose(enteredValue);
+
         updateDosingUI();
     });
 }

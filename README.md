@@ -4,14 +4,20 @@
 
 Mix and measure with confidence.
 
-![Version](https://img.shields.io/badge/version-0.1.0--pre-blue)
-![Status](https://img.shields.io/badge/status-Phase%201%20Complete-green)
+![Version](https://img.shields.io/badge/version-0.3.0--pre-blue)
+![Status](https://img.shields.io/badge/status-Release%20Candidate-orange)
 
 ## Overview
 
 Clearmix is a web-based calculator that helps users accurately reconstitute peptide vials and calculate precise dosing. The tool guides users through the math of mixing bacteriostatic water with peptide powder and determining the correct syringe draw volume for their prescribed dose.
 
-## Features (v0.1.0-pre)
+## Features (v0.3.0-pre)
+
+### 🛡️ Input Validation & Safety (New)
+- **Smart Logic**: Prevents unsafe inputs (e.g., zero/negative values).
+- **Vial Safety**: Clamps maximum vial amount to 30mg to prevent magnitude errors.
+- **Dose Warnings**: Alerts users to unusually high doses (>500mcg info, >1000mcg warning).
+- **Water Limits**: Guides users to stay within standard 1-10mL reconstitution volumes.
 
 ### Two-Screen Mode
 - **Mixing Screen**: Calculate how to reconstitute your peptide vial
@@ -37,6 +43,7 @@ Clearmix is a web-based calculator that helps users accurately reconstitute pept
 - **Backend**: Python/Flask
 - **Frontend**: Vanilla HTML, CSS, JavaScript
 - **Styling**: Custom CSS design system (no frameworks)
+- **Testing**: Pytest (Automated Unit Tests)
 
 ## Getting Started
 
@@ -85,6 +92,7 @@ ClearMix/
 ## Roadmap
 
 - [x] Phase 1: Core calculator with two-screen mode
+- [x] Phase 1.5: Comprehensive Input Validation & Safety
 - [ ] Phase 2: Syringe visual enhancement
 - [ ] Phase 3: Mobile responsiveness
 - [ ] Phase 4: Local storage for preferences
