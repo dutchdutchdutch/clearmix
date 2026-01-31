@@ -1,8 +1,9 @@
 /**
  * Clearmix Design System
  * 
- * Inspired by: Medical-tech UI (Varian, Brainqub3)
- * Aesthetic: Dark mode, calm but premium, high-contrast numbers
+ * Design Direction: Deep Indigo + Mint
+ * Aesthetic: Friendly, approachable, athletic wellness
+ * Target: Athletes using peptides at home
  */
 
 /* ================================================================
@@ -12,42 +13,48 @@
 :root {
     /* === Colors === */
 
-    /* Background palette */
-    --color-bg-primary: #0a0e14;
-    --color-bg-secondary: #0d1218;
-    --color-bg-card: #111820;
-    --color-bg-card-hover: #151d26;
-    --color-bg-elevated: #1a2332;
+    /* Background palette - Deep Indigo */
+    --color-bg-primary: #1e1b4b;
+    --color-bg-secondary: #2e2a5e;
+    --color-bg-card: #3b3770;
+    --color-bg-card-hover: #4a4580;
+    --color-bg-elevated: #4f4a85;
 
     /* Text palette */
     --color-text-primary: #ffffff;
-    --color-text-secondary: #a0aec0;
-    --color-text-muted: #64748b;
-    --color-text-inverse: #0a0e14;
+    --color-text-secondary: #c4b5fd;
+    --color-text-muted: #8b8ba3;
+    --color-text-inverse: #1e1b4b;
 
-    /* Accent - Cyan/Teal */
-    --color-accent: #00d4ff;
-    --color-accent-hover: #00bfe8;
-    --color-accent-subtle: rgba(0, 212, 255, 0.1);
-    --color-accent-border: rgba(0, 212, 255, 0.3);
+    /* Accent - Mint Green */
+    --color-accent: #34d399;
+    --color-accent-hover: #2cc389;
+    --color-accent-subtle: rgba(52, 211, 153, 0.15);
+    --color-accent-border: rgba(52, 211, 153, 0.4);
+
+    /* Secondary Accent - Lavender */
+    --color-secondary: #a78bfa;
+    --color-secondary-subtle: rgba(167, 139, 250, 0.15);
+    --color-secondary-border: rgba(167, 139, 250, 0.4);
 
     /* Semantic colors */
     --color-warning: #fbbf24;
-    --color-warning-bg: rgba(251, 191, 36, 0.1);
-    --color-warning-border: rgba(251, 191, 36, 0.3);
+    --color-warning-bg: rgba(251, 191, 36, 0.15);
+    --color-warning-border: rgba(251, 191, 36, 0.4);
 
-    --color-success: #10b981;
-    --color-success-bg: rgba(16, 185, 129, 0.1);
+    --color-success: #34d399;
+    --color-success-bg: rgba(52, 211, 153, 0.15);
 
-    --color-error: #ef4444;
-    --color-error-bg: rgba(239, 68, 68, 0.1);
+    --color-error: #f87171;
+    --color-error-bg: rgba(248, 113, 113, 0.15);
 
     /* Border */
-    --color-border: rgba(255, 255, 255, 0.08);
-    --color-border-strong: rgba(255, 255, 255, 0.15);
+    --color-border: rgba(167, 139, 250, 0.2);
+    --color-border-strong: rgba(167, 139, 250, 0.35);
 
     /* === Typography === */
-    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-family-display: 'Barlow Condensed', 'Barlow', sans-serif;
     --font-family-mono: 'SF Mono', 'Fira Code', monospace;
 
     /* Font sizes */
@@ -112,16 +119,18 @@
 
     /* === Layout === */
     --max-width: 520px;
-    --border-radius-sm: 6px;
-    --border-radius: 10px;
-    --border-radius-lg: 14px;
+    --border-radius-sm: 8px;
+    --border-radius: 12px;
+    --border-radius-lg: 16px;
+    --border-radius-xl: 20px;
     --border-radius-full: 9999px;
 
     /* === Shadows === */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.3);
+    --shadow-glow: 0 0 20px rgba(52, 211, 153, 0.3);
+    --shadow-glow-strong: 0 0 30px rgba(52, 211, 153, 0.4);
 
     /* === Transitions === */
     --transition-fast: 150ms ease;
@@ -157,8 +166,8 @@ body {
     min-height: 100vh;
 }
 
-/* Google Fonts - Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+/* Google Fonts - Barlow (Athletic, Friendly) */
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap');
 
 
 /* ================================================================
@@ -372,6 +381,35 @@ body {
     pointer-events: none;
 }
 
+/* Dose input with accent highlight - always visible */
+.dose-input-highlight {
+    border: 2px solid var(--color-accent);
+    border-radius: var(--border-radius);
+    /* Match the input's border-radius */
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+    overflow: hidden;
+    /* Clip the inner input to the rounded corners */
+}
+
+/* Remove inner border when inside highlight wrapper */
+.dose-input-highlight .input {
+    border: none;
+    border-radius: 0;
+    background: var(--color-bg-card);
+}
+
+.dose-input-highlight .input:focus {
+    border: none;
+    box-shadow: none;
+    /* Glow is already on the wrapper */
+}
+
+/* Lighter placeholder for dose input */
+.dose-input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+    font-weight: 400;
+}
+
 
 /* ================================================================
    BUTTONS
@@ -437,21 +475,21 @@ body {
 
 .preset-group {
     display: flex;
-    gap: var(--space-2);
+    gap: var(--space-4);
     flex-wrap: wrap;
 }
 
 .preset-btn {
     flex: 1;
-    min-width: 60px;
-    padding: var(--space-3) var(--space-2);
+    min-width: 70px;
+    padding: var(--space-4) var(--space-3);
     font-family: var(--font-family);
-    font-size: var(--text-sm);
+    font-size: var(--text-base);
     font-weight: var(--font-semibold);
     color: var(--color-text-secondary);
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border-strong);
-    border-radius: var(--border-radius);
+    background: var(--color-bg-primary);
+    border: 2px solid var(--color-border-strong);
+    border-radius: var(--border-radius-full);
     cursor: pointer;
     transition: all var(--transition-fast);
     text-align: center;
@@ -459,15 +497,20 @@ body {
 
 .preset-btn:hover {
     color: var(--color-text-primary);
-    border-color: var(--color-text-muted);
+    border-color: var(--color-secondary);
+    background: var(--color-secondary-subtle);
 }
 
 .preset-btn--active,
 .preset-btn:focus {
-    color: var(--color-accent);
+    color: var(--color-text-inverse);
     border-color: var(--color-accent);
-    background: var(--color-accent-subtle);
+    background: var(--color-accent);
     outline: none;
+}
+
+.preset-btn--active .mode-btn__desc {
+    color: var(--color-text-inverse);
 }
 
 
@@ -905,17 +948,17 @@ body {
 
 /* ================================================================
    TWO-SCREEN MODE NAVIGATION
-   Primary navigation - should be very distinct from other controls
+   Primary navigation - Large, obvious toggle for Mixing/Dosing modes
    ================================================================ */
 
 .mode-nav {
     display: flex;
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
     padding: var(--space-2);
     background: var(--color-bg-secondary);
     border-radius: var(--border-radius-xl);
-    border: 1px solid var(--color-border);
+    border: 2px solid var(--color-border);
 }
 
 .mode-btn {
@@ -923,54 +966,29 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-5) var(--space-4);
+    justify-content: center;
+    gap: var(--space-1);
+    padding: var(--space-4) var(--space-6);
     background: transparent;
-    border: 2px solid transparent;
+    border: none;
     border-radius: var(--border-radius-lg);
     cursor: pointer;
     transition: all var(--transition-base);
     text-align: center;
-    position: relative;
 }
 
 .mode-btn:hover:not(.mode-btn--active) {
     background: var(--color-bg-card);
-    border-color: var(--color-border-strong);
 }
 
 .mode-btn--active {
-    background: linear-gradient(135deg, var(--color-accent-subtle) 0%, rgba(0, 212, 255, 0.15) 100%);
-    border-color: var(--color-accent);
-    box-shadow:
-        0 0 20px rgba(0, 212, 255, 0.3),
-        0 0 40px rgba(0, 212, 255, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-.mode-btn--active::before {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 3px;
     background: var(--color-accent);
-    border-radius: 2px;
-}
-
-.mode-btn__icon {
-    font-size: 2rem;
-    line-height: 1;
-}
-
-.mode-btn--active .mode-btn__icon {
-    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.5));
+    box-shadow: var(--shadow-glow);
 }
 
 .mode-btn__label {
-    font-size: var(--text-lg);
+    font-family: var(--font-family-display);
+    font-size: var(--text-xl);
     font-weight: var(--font-bold);
     color: var(--color-text-secondary);
     text-transform: uppercase;
@@ -978,8 +996,7 @@ body {
 }
 
 .mode-btn--active .mode-btn__label {
-    color: var(--color-accent);
-    text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+    color: var(--color-text-inverse);
 }
 
 .mode-btn__desc {
@@ -988,7 +1005,8 @@ body {
 }
 
 .mode-btn--active .mode-btn__desc {
-    color: var(--color-text-secondary);
+    color: var(--color-text-inverse);
+    opacity: 0.8;
 }
 
 
@@ -1343,4 +1361,374 @@ body {
 .input--error {
     border-color: var(--color-error) !important;
     box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+
+/* ================================================================
+   STEP CARDS V2 (Vertical Timeline Layout)
+   ================================================================ */
+
+.step-card-v2 {
+    position: relative;
+    padding-left: var(--space-5);
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.step-badge-v2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    color: var(--color-text-inverse);
+    background: var(--color-accent);
+    border-radius: var(--border-radius-full);
+    flex-shrink: 0;
+}
+
+.step-title {
+    font-family: var(--font-family-display);
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    color: var(--color-text-primary);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+}
+
+.step-description {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+    padding-left: calc(28px + var(--space-3));
+}
+
+.step-description strong {
+    color: var(--color-accent);
+}
+
+/* Step Instruction Box (inline callout) */
+.step-instruction-box {
+    background: var(--color-accent-subtle);
+    border: 1px solid var(--color-accent-border);
+    border-radius: var(--border-radius);
+    padding: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.step-instruction-box strong {
+    display: block;
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-1);
+}
+
+.step-instruction-box p {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+/* Warning text styling */
+.warning-text {
+    color: var(--color-warning) !important;
+}
+
+/* Visual Syringe Instructions */
+.visual-draw-container {
+    margin-top: 1rem;
+    padding: 1rem 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--border-radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Center horizontally */
+}
+
+.draw-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+    justify-content: center;
+    /* Center row content */
+}
+
+.draw-row:last-child {
+    margin-bottom: 0;
+}
+
+.draw-multiplier {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--color-accent);
+    min-width: 3rem;
+    text-align: right;
+}
+
+.mini-syringe-wrapper {
+    flex-grow: 1;
+    /* Take remaining space */
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    /* align-items: center; Remove to allow left alignment label support if needed, but centering usually fine.
+       Actually, keep stretch for the syringe div */
+}
+
+.mini-syringe {
+    width: 100%;
+    /* Fill the wrapper */
+    height: 32px;
+    /* Increased height per plan */
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Tick marks overlay */
+.mini-syringe::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: repeating-linear-gradient(90deg,
+            rgba(255, 255, 255, 0.3) 0px,
+            rgba(255, 255, 255, 0.3) 1px,
+            transparent 1px,
+            transparent 10%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.mini-syringe--full {
+    background: var(--color-accent);
+    box-shadow: none;
+}
+
+/* Fill visualization for partial syringe */
+.mini-syringe::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--fill, 0%);
+    background: var(--color-accent);
+    border-radius: 12px 0 0 12px;
+}
+
+/* Ensure full rounded corners if nearly full */
+.mini-syringe[style*="--fill: 100%"]::after,
+.mini-syringe[style*="--fill: 9"]::after {
+    /* approximate for high % */
+    border-radius: 12px;
+}
+
+.mini-syringe-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+/* Visual Syringe Instructions - Grid Layout */
+.visual-draw-grid {
+    margin-top: 1rem;
+    padding: 1rem 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--border-radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+
+    display: grid;
+    grid-template-columns: auto 1fr;
+    /* [Multiplier] [Syringe/Scale] */
+    gap: 0.75rem 1rem;
+    /* Row gap | Column gap */
+    align-items: center;
+    position: relative;
+}
+
+/* Multiplier styling */
+.grid-multiplier {
+    text-align: right;
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--color-accent);
+    white-space: nowrap;
+}
+
+/* Syringe area wrapper */
+.grid-syringe-area {
+    position: relative;
+    width: 100%;
+    height: 32px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Base syringe style (clean bar) */
+.mini-syringe {
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    /* Slightly tighter radius for bar look */
+    position: relative;
+    overflow: hidden;
+    /* Mask fill and internal elements */
+}
+
+/* Filled state */
+.mini-syringe--full {
+    background: var(--color-accent);
+}
+
+.mini-syringe::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--fill, 0%);
+    background: var(--color-accent);
+    border-radius: 8px 0 0 8px;
+}
+
+/* Partial Label */
+.mini-syringe-label {
+    margin-top: 2px;
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+/* --- Scale and Grid Lines --- */
+
+/* Container for background grid lines (overlay) */
+.grid-background-lines {
+    grid-column: 2;
+    /* Occupy the syringe/scale column */
+    grid-row: 1 / -1;
+    /* Span entire grid height */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    /* Behind content */
+}
+
+/* Individual Grid Line */
+.grid-line {
+    position: absolute;
+    top: 0;
+    bottom: 25px;
+    /* Stop before scale labels */
+    border-left: 1px dashed rgba(255, 255, 255, 0.15);
+    transform: translateX(-0.5px);
+    /* Center on pixel */
+}
+
+/* Scale Axis Row */
+.grid-scale-row {
+    grid-column: 2;
+    position: relative;
+    height: 20px;
+    margin-top: 0.25rem;
+}
+
+/* Axis Tick Label */
+.scale-tick-label {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+}
+
+/* --- Refined Ruler Axis Overrides --- */
+.grid-background-lines {
+    display: none !important;
+}
+
+.grid-scale-row {
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    margin-top: 0.5rem;
+    height: 30px;
+    overflow: visible;
+}
+
+.scale-tick-label {
+    top: -1px;
+    /* Align with border */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 0;
+}
+
+.scale-tick-label::before {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 8px;
+    /* Slightly visible tick */
+    background: rgba(255, 255, 255, 0.3);
+    margin-bottom: 4px;
+}
+
+
+/* REMOVE gradient ticks from syringe */
+.mini-syringe::before {
+    display: none !important;
+    background-image: none !important;
+}
+
+/* Intermediate Ticks */
+.scale-tick-minor {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 4px;
+    /* Half height */
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(-50%);
+}
+
+
+/* Step 2 Vial Icon */
+.step-icon-vial {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: 64px;
+    /* Larger as requested? 'Line drawing' implies visibility */
+    height: 64px;
+    color: var(--color-accent);
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.step-card-v2 {
+    position: relative;
 }

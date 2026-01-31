@@ -2,7 +2,7 @@
  * Clearmix Calculator - Two Screen Mode
  * 
  * Screen 1: Mixing (Reconstitution)
- * Screen 2: Dosing
+ * Screen 2: Dosing (Self-administration)
  */
 
 console.log('🧪 Clearmix calculator loaded');
@@ -52,7 +52,7 @@ const CONSTRAINTS = {
     dose: {
         min: 1,
         cautionThreshold: 500,  // Friendly reminder
-        warningThreshold: 1000, // High dose warning
+        max: 1000,              // Maximum supported dose
         unit: 'mcg'
     },
     vial: {
@@ -120,7 +120,7 @@ function validateWaterVolume(value) {
  * @returns {object} - { valid, alertType, message }
  */
 function validateDose(value) {
-    const { cautionThreshold, warningThreshold } = CONSTRAINTS.dose;
+    const { cautionThreshold, max } = CONSTRAINTS.dose;
 
     // Clear previous alerts
     hideAlert('dose-alert-info');
@@ -128,17 +128,18 @@ function validateDose(value) {
 
     if (value === null || value === undefined || isNaN(value) || value <= 0) {
         state.validationErrors.dose = false;
-        return { valid: true, alertType: null, message: null };
+        return { valid: true, correctedValue: null, alertType: null, message: null };
     }
 
-    // High dose warning (above 1000 mcg) - Orange warning
-    if (value > warningThreshold) {
-        showAlert('dose-alert-warning', `⚠️ ${value} mcg is a high dosage for those new to self-administering peptides. Please verify with your prescriber.`);
-        state.validationErrors.dose = false; // Warning only, calculations proceed
+    // Over maximum - reset to max with friendly message
+    if (value > max) {
+        showAlert('dose-alert-info', `🏥 Clearmix supports doses up to ${max} mcg. For higher amounts, please consult your prescriber for detailed instructions.`);
+        state.validationErrors.dose = false;
         return {
             valid: true,
-            alertType: 'warning',
-            message: 'High dosage warning'
+            correctedValue: max,
+            alertType: 'info',
+            message: `Maximum supported is ${max} mcg.`
         };
     }
 
@@ -148,6 +149,7 @@ function validateDose(value) {
         state.validationErrors.dose = false;
         return {
             valid: true,
+            correctedValue: null,
             alertType: 'info',
             message: 'Check prescription reminder'
         };
@@ -155,7 +157,7 @@ function validateDose(value) {
 
     // Valid, no warnings
     state.validationErrors.dose = false;
-    return { valid: true, alertType: null, message: null };
+    return { valid: true, correctedValue: null, alertType: null, message: null };
 }
 
 /**
@@ -241,11 +243,12 @@ function calculateDosing() {
     if (!state.concentrationMcgPerMl || !state.doseMcg) return null;
 
     state.doseMl = state.doseMcg / state.concentrationMcgPerMl;
-    state.doseUnits = Math.round(state.doseMl * 100);
+    // Round to 0.1 unit precision (e.g., 2.5 units)
+    state.doseUnits = Math.round(state.doseMl * 1000) / 10;
     state.numDoses = Math.floor((state.vialMg * 1000) / state.doseMcg);
 
-    // Practical rounding
-    const doseMlPractical = Math.round(state.doseMl * 100) / 100;
+    // Practical rounding to 0.001 mL (3 decimal places)
+    const doseMlPractical = Math.round(state.doseMl * 1000) / 1000;
 
     return {
         doseMl: state.doseMl,
@@ -264,15 +267,30 @@ function updateMixingUI() {
     const result = calculateMixing();
     if (!result) return;
 
-    // Update mixing instructions
-    document.getElementById('mix-draw-water').textContent = state.diluentMl.toFixed(1) + ' mL';
-    document.getElementById('mix-syringe-size').textContent = state.mixingSyringeMl + ' mL';
+    // Update mixing instructions (if elements exist - some were removed in layout restructure)
+    const mixDrawWaterEl = document.getElementById('mix-draw-water');
+    const mixSyringeSizeEl = document.getElementById('mix-syringe-size');
+
+    if (mixDrawWaterEl) {
+        mixDrawWaterEl.textContent = state.diluentMl.toFixed(1) + ' mL';
+    }
+    if (mixSyringeSizeEl) {
+        mixSyringeSizeEl.textContent = state.mixingSyringeMl + ' mL';
+    }
 
     // Update concentration display
-    document.getElementById('mix-concentration').textContent = Math.round(result.concentrationMcgPerMl);
-    document.getElementById('mix-concentration-mg').textContent = result.concentrationMgPerMl.toFixed(1);
+    // Update concentration display (Step 4 secondary text)
+    const concMg = result.concentrationMgPerMl;
+    const concMcg = Math.round(result.concentrationMcgPerMl);
 
-    // Update water meter
+    // Format: 10.0 mg/mL (or 10,000 mcg/mL)
+    const concText = `${concMg.toFixed(1)} mg/mL (or ${concMcg.toLocaleString()} mcg/mL)`;
+    const finalConcEl = document.getElementById('final-concentration-text');
+    if (finalConcEl) {
+        finalConcEl.textContent = concText;
+    }
+
+    // Update water meter - this is the primary display now
     updateWaterMeter();
 }
 
@@ -287,62 +305,75 @@ function updateWaterMeter() {
     // Calculate draws needed
     const drawsInfo = calculateDrawsNeeded(waterMl, syringeMl);
 
-    // Update meter title with draws info
+    // Update meter title with units-based display
     document.getElementById('water-meter-draw').textContent = drawsInfo.displayText;
-
-    // Update fill bar and marker
-    document.getElementById('water-meter-fill').style.width = fillPercent + '%';
-    document.getElementById('water-meter-marker').style.left = Math.min(fillPercent, 100) + '%';
 
     // Update syringe info
     document.getElementById('water-meter-syringe-label').textContent = syringeMl + ' mL';
     document.getElementById('water-meter-total-units').textContent = totalUnits;
 
-    // Show/hide multiple draws warning
-    const infoEl = document.getElementById('water-meter-draws-info');
-    if (infoEl) {
-        if (drawsInfo.needsMultiple) {
-            infoEl.textContent = drawsInfo.instruction;
-            infoEl.style.display = 'block';
-        } else {
-            infoEl.style.display = 'none';
-        }
-    }
+    // --- VISUAL INSTRUCTIONS RENDERER ---
+    // --- VISUAL INSTRUCTIONS RENDERER ---
+    const visualContainer = document.getElementById('visual-draw-container');
 
-    // Generate scale ticks for water meter
-    generateWaterMeterScale(totalUnits);
+    if (visualContainer) {
+        renderSyringeVisual(visualContainer, state.diluentMl, state.mixingSyringeMl, state.mixingSyringeUnits);
+    }
 }
 
 /**
- * Calculate how many draws are needed and provide a simple recommendation
+ * Calculate how many draws are needed and provide accurate, user-friendly instructions
+ * @param {number} targetMl - Total water volume needed in mL
+ * @param {number} syringeMl - Syringe capacity in mL
+ * @returns {object} - Draw information with unit-based display
  */
 function calculateDrawsNeeded(targetMl, syringeMl) {
+    // Convert to units (1 mL = 100 units)
+    const targetUnits = Math.round(targetMl * 100);
+    const syringeUnits = Math.round(syringeMl * 100);
+
     if (targetMl <= syringeMl) {
         // Single draw fits in syringe
         return {
             needsMultiple: false,
-            displayText: targetMl.toFixed(1) + ' mL',
-            instruction: ''
+            totalUnits: targetUnits,
+            displayText: `${targetUnits} units`,
+            fullDraws: 1,
+            partialUnits: 0,
+            refillMessage: ''
         };
     }
 
-    // Need multiple draws
-    const fullDraws = Math.floor(targetMl / syringeMl);
-    const remainder = Math.round((targetMl - (fullDraws * syringeMl)) * 100) / 100;
+    // Calculate full draws and remainder
+    const fullDraws = Math.floor(targetUnits / syringeUnits);
+    const partialUnits = targetUnits % syringeUnits;
 
-    let instruction;
-    if (remainder === 0) {
-        // Exact multiple (e.g., 2 mL with 0.5 mL syringe = 4 full draws)
-        instruction = `${fullDraws} × ${syringeMl} mL`;
+    // Create accurate, friendly message
+    let refillMessage;
+
+    if (partialUnits === 0) {
+        // Exact multiple - all full draws
+        if (fullDraws === 1) {
+            refillMessage = "Fill up once with a full syringe";
+        } else {
+            refillMessage = `Fill up ${fullDraws} times with a full syringe`;
+        }
     } else {
-        // Has remainder (e.g., 2 mL with 0.3 mL syringe = 6 × 0.3 + 0.2)
-        instruction = `${fullDraws} × ${syringeMl} mL + 1 × ${remainder.toFixed(1)} mL`;
+        // Has partial draw at the end
+        if (fullDraws === 1) {
+            refillMessage = `Fill up once with a full syringe, then draw ${partialUnits} units`;
+        } else {
+            refillMessage = `Fill up ${fullDraws} times with a full syringe, then draw ${partialUnits} units`;
+        }
     }
 
     return {
         needsMultiple: true,
-        displayText: targetMl.toFixed(1) + ' mL total',
-        instruction: instruction
+        totalUnits: targetUnits,
+        displayText: `${targetUnits} units`,
+        fullDraws: fullDraws,
+        partialUnits: partialUnits,
+        refillMessage: refillMessage
     };
 }
 
@@ -398,8 +429,16 @@ function updateDosingUI() {
 
     // Show and update results
     document.getElementById('dosing-result').style.display = 'block';
-    document.getElementById('result-dose-ml').textContent = result.doseMlPractical.toFixed(2);
-    document.getElementById('result-dose-units').textContent = result.doseUnits;
+    // Format mL: show 0.025 or 0.05 (not 0.050)
+    // Use integer comparison to avoid floating-point precision issues
+    const mlAsInt = Math.round(result.doseMlPractical * 1000);
+    const formattedMl = mlAsInt % 10 === 0
+        ? result.doseMlPractical.toFixed(2)
+        : result.doseMlPractical.toFixed(3);
+    document.getElementById('result-dose-ml').textContent = formattedMl;
+    // Format units: show 2.5 or 5 (not 5.0)
+    const formattedUnits = Number.isInteger(result.doseUnits) ? result.doseUnits.toString() : result.doseUnits.toFixed(1);
+    document.getElementById('result-dose-units').textContent = formattedUnits;
     document.getElementById('summary-dose').textContent = state.doseMcg;
     document.getElementById('result-num-doses').textContent = result.numDoses;
 
@@ -422,52 +461,18 @@ function updateDosingUI() {
 // ================================================================
 
 function updateSyringeMeter(result) {
-    const totalUnits = state.dosingSyringeUnits;
-    const fillUnits = result.doseUnits;
-    const fillPercent = Math.min((fillUnits / totalUnits) * 100, 100);
-
-    // Update meter title
-    document.getElementById('meter-dose').textContent = state.doseMcg;
-    document.getElementById('meter-draw-line').textContent = fillUnits + ' units';
-
-    // Update fill bar and marker
-    document.getElementById('meter-fill').style.width = fillPercent + '%';
-    document.getElementById('meter-marker').style.left = fillPercent + '%';
-
-    // Update syringe info
-    document.getElementById('meter-syringe-label').textContent = state.dosingSyringeMl + ' mL';
-    document.getElementById('meter-total-units').textContent = totalUnits;
-
-    // Generate scale ticks
-    generateMeterScale(totalUnits);
-}
-
-function generateMeterScale(totalUnits) {
-    const scaleContainer = document.getElementById('meter-scale');
-    scaleContainer.innerHTML = '';
-
-    // Determine tick interval based on syringe size
-    let majorInterval = 10;
-    let minorInterval = 5;
-
-    if (totalUnits === 30) {
-        majorInterval = 5;
-        minorInterval = 1;
+    // 1. Render Visual
+    const container = document.getElementById('dose-visual-container');
+    if (container) {
+        renderSyringeVisual(container, result.doseMlPractical, state.dosingSyringeMl, state.dosingSyringeUnits);
     }
 
-    // Generate ticks
-    for (let i = 0; i <= totalUnits; i += minorInterval) {
-        const isMajor = i % majorInterval === 0;
-        const tick = document.createElement('div');
-        tick.className = 'syringe-meter__tick' + (isMajor ? ' syringe-meter__tick--major' : '');
+    // 2. Update Info Text
+    const labelEl = document.getElementById('dose-meter-syringe-label');
+    const unitsEl = document.getElementById('dose-meter-total-units');
 
-        tick.innerHTML = `
-            <div class="syringe-meter__tick-line"></div>
-            ${isMajor ? `<span class="syringe-meter__tick-label">${i}</span>` : ''}
-        `;
-
-        scaleContainer.appendChild(tick);
-    }
+    if (labelEl) labelEl.textContent = state.dosingSyringeMl + ' mL';
+    if (unitsEl) unitsEl.textContent = state.dosingSyringeUnits;
 }
 
 
@@ -691,13 +696,176 @@ function initDoseInput() {
     const doseInput = document.getElementById('dose-mcg');
     doseInput.addEventListener('input', (e) => {
         const enteredValue = parseFloat(e.target.value);
-        state.doseMcg = enteredValue || null;
 
         // Validate and show appropriate alerts
-        validateDose(enteredValue);
+        const validation = validateDose(enteredValue);
+
+        // If there's a correctedValue (e.g., max exceeded), reset the input
+        if (validation.correctedValue !== null && validation.correctedValue !== undefined) {
+            e.target.value = validation.correctedValue;
+            state.doseMcg = validation.correctedValue;
+        } else {
+            state.doseMcg = enteredValue || null;
+        }
 
         updateDosingUI();
     });
+}
+
+
+// ================================================================
+// SHARED VISUAL RENDERER
+// ================================================================
+
+/**
+ * Renders a visual syringe meter into the specified container.
+ * @param {HTMLElement} container - The container element (grid).
+ * @param {number} targetMl - The amount to draw in mL.
+ * @param {number} syringeMl - The syringe capacity in mL.
+ * @param {number} syringeTotalUnits - The syringe capacity in Units (e.g. 100).
+ */
+function renderSyringeVisual(container, targetMl, syringeMl, syringeTotalUnits) {
+    if (!container) return;
+
+    container.innerHTML = ''; // Clear previous
+    container.style.display = 'block'; // Ensure container is visible (grid is now internal)
+    // container.style.display = 'grid'; // REMOVED - using inner wrapper instead
+
+    // Create inner grid wrapper with padding for breathing room
+    const gridWrapper = document.createElement('div');
+    gridWrapper.style.display = 'grid';
+    gridWrapper.style.gridTemplateColumns = 'auto 1fr';
+    gridWrapper.style.gap = '0.75rem 1rem';
+    gridWrapper.style.alignItems = 'center';
+    gridWrapper.style.width = '100%';
+    gridWrapper.style.padding = '0 1.5rem'; // Padding for Option A
+    gridWrapper.style.boxSizing = 'border-box';
+
+    container.appendChild(gridWrapper);
+
+    // Helper to create a Grid Row
+    const createGridRow = (multiplierText, fillPercent, labelText = null) => {
+        // Col 1: Multiplier
+        const multiEl = document.createElement('div');
+        multiEl.className = 'grid-multiplier';
+        multiEl.textContent = multiplierText || '';
+        gridWrapper.appendChild(multiEl);
+
+        // Col 2: Syringe Content
+        const syringeArea = document.createElement('div');
+        syringeArea.className = 'grid-syringe-area';
+
+        const syringe = document.createElement('div');
+        syringe.className = 'mini-syringe';
+        if (fillPercent >= 100) {
+            syringe.classList.add('mini-syringe--full');
+        } else {
+            syringe.style.setProperty('--fill', `${fillPercent}%`);
+        }
+        syringeArea.appendChild(syringe);
+
+        // Label (optional)
+        if (labelText) {
+            const label = document.createElement('div');
+            label.className = 'mini-syringe-label';
+            label.textContent = labelText;
+            syringeArea.appendChild(label);
+            syringeArea.style.height = 'auto';
+            syringe.style.height = '32px';
+        }
+
+        gridWrapper.appendChild(syringeArea);
+    };
+
+    // Calculate draws needed
+    const drawsInfo = calculateDrawsNeeded(targetMl, syringeMl);
+
+    // Render Rows
+    if (!drawsInfo.needsMultiple) {
+        const singleFillPercent = (targetMl / syringeMl) * 100;
+        createGridRow('', singleFillPercent, null);
+    } else {
+        // Multiple Draws
+        if (drawsInfo.fullDraws > 0) {
+            createGridRow(`${drawsInfo.fullDraws} ×`, 100);
+        }
+        if (drawsInfo.partialUnits > 0) {
+            const partialFillPercent = (drawsInfo.partialUnits / syringeTotalUnits) * 100;
+            createGridRow('+', partialFillPercent, `${drawsInfo.partialUnits} units`);
+        }
+    }
+
+    // Render Scale Axis Row
+    const emptyCell = document.createElement('div');
+    gridWrapper.appendChild(emptyCell);
+
+    const scaleRow = document.createElement('div');
+    scaleRow.className = 'grid-scale-row';
+
+    // Scale configuration based on syringe size
+    // For 30/50 units: tick every unit, label every 5
+    // For 100 units: tick every 10, minor every 5
+    const isSmallSyringe = syringeTotalUnits <= 50;
+
+    // Helper to create a positioned label with appropriate alignment
+    const createLabel = (value, position, isFirst, isLast) => {
+        const tick = document.createElement('div');
+        tick.className = 'scale-tick-label';
+        tick.style.left = `${position}%`;
+        tick.textContent = value;
+
+        // Adjust alignment for edge labels to prevent clipping
+        if (isFirst) {
+            tick.style.transform = 'translateX(0)';
+            tick.style.left = '0';
+        } else if (isLast) {
+            tick.style.transform = 'translateX(-100%)';
+            tick.style.left = '100%';
+        }
+        return tick;
+    };
+
+    if (isSmallSyringe) {
+        // Granular scale for 0.3mL (30 units) and 0.5mL (50 units)
+        // Tick mark for every unit, labels at multiples of 5
+        for (let i = 0; i <= syringeTotalUnits; i++) {
+            const position = (i / syringeTotalUnits) * 100;
+
+            if (i % 5 === 0) {
+                // Major tick with label (every 5 units)
+                const isFirst = (i === 0);
+                const isLast = (i === syringeTotalUnits);
+                const tick = createLabel(i, position, isFirst, isLast);
+                scaleRow.appendChild(tick);
+            } else {
+                // Minor tick (every unit between labels)
+                const minor = document.createElement('div');
+                minor.className = 'scale-tick-minor';
+                minor.style.left = `${position}%`;
+                scaleRow.appendChild(minor);
+            }
+        }
+    } else {
+        // Standard scale for 1mL (100 units): labels every 10, minors every 5
+        const tickStep = 10;
+        for (let i = 0; i <= syringeTotalUnits; i += tickStep) {
+            // Major Tick
+            const position = (i / syringeTotalUnits) * 100;
+            const isFirst = (i === 0);
+            const isLast = (i === syringeTotalUnits);
+            const tick = createLabel(i, position, isFirst, isLast);
+            scaleRow.appendChild(tick);
+
+            // Minor Tick (Halfway)
+            if (i + 5 <= syringeTotalUnits) {
+                const minor = document.createElement('div');
+                minor.className = 'scale-tick-minor';
+                minor.style.left = `${((i + 5) / syringeTotalUnits) * 100}%`;
+                scaleRow.appendChild(minor);
+            }
+        }
+    }
+    gridWrapper.appendChild(scaleRow);
 }
 
 

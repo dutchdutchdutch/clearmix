@@ -228,3 +228,81 @@ def test_vial_above_absolute_max():
     assert res["valid"] is False
     assert res["correctedValue"] == 30
     assert res["alertType"] == "error"
+
+
+# ----------------------------------------------------------------------
+# Dose Precision Calculation Tests (x.1 unit / 3-decimal mL)
+# ----------------------------------------------------------------------
+
+def calculate_dose_precision(dose_mcg, concentration_mcg_per_ml):
+    """
+    Mimic the JS calculateDosing logic for precision.
+    Returns: dose_ml (3 decimal), dose_units (0.1 precision).
+    """
+    dose_ml = dose_mcg / concentration_mcg_per_ml
+    # 3-decimal mL precision
+    dose_ml_practical = round(dose_ml * 1000) / 1000
+    # 0.1 unit precision (1 mL = 100 units)
+    dose_units = round(dose_ml * 1000) / 10
+    return dose_ml_practical, dose_units
+
+
+def format_dose_ml(dose_ml_practical):
+    """Format mL: show 0.025 or 0.05 (not 0.050)."""
+    # Use integer comparison to avoid floating-point precision issues
+    # Multiply by 1000, check if divisible by 10 (i.e., ends in 0)
+    as_int = round(dose_ml_practical * 1000)
+    if as_int % 10 == 0:
+        return f"{dose_ml_practical:.2f}"
+    return f"{dose_ml_practical:.3f}"
+
+
+def format_dose_units(dose_units):
+    """Format units: show 2.5 or 5 (not 5.0)."""
+    if dose_units == int(dose_units):
+        return str(int(dose_units))
+    return f"{dose_units:.1f}"
+
+
+class TestDosePrecision:
+    """Tests for x.1 unit precision and 3-decimal mL precision."""
+
+    def test_250mcg_at_10000_concentration(self):
+        """250 mcg at 10000 mcg/mL = 0.025 mL = 2.5 units (NOT 3)."""
+        ml, units = calculate_dose_precision(250, 10000)
+        assert ml == 0.025, f"Expected 0.025, got {ml}"
+        assert units == 2.5, f"Expected 2.5, got {units}"
+        assert format_dose_ml(ml) == "0.025"
+        assert format_dose_units(units) == "2.5"
+
+    def test_250mcg_at_5000_concentration(self):
+        """250 mcg at 5000 mcg/mL = 0.05 mL = 5 units (NOT 5.0)."""
+        ml, units = calculate_dose_precision(250, 5000)
+        assert ml == 0.05, f"Expected 0.05, got {ml}"
+        assert units == 5, f"Expected 5, got {units}"
+        assert format_dose_ml(ml) == "0.05"
+        assert format_dose_units(units) == "5"
+
+    def test_500mcg_at_5000_concentration(self):
+        """500 mcg at 5000 mcg/mL = 0.1 mL = 10 units."""
+        ml, units = calculate_dose_precision(500, 5000)
+        assert ml == 0.1, f"Expected 0.1, got {ml}"
+        assert units == 10, f"Expected 10, got {units}"
+        assert format_dose_ml(ml) == "0.10"
+        assert format_dose_units(units) == "10"
+
+    def test_375mcg_at_10000_concentration(self):
+        """375 mcg at 10000 mcg/mL = 0.0375 -> rounds to 0.038 mL = 3.8 units."""
+        ml, units = calculate_dose_precision(375, 10000)
+        assert ml == 0.038, f"Expected 0.038, got {ml}"
+        assert units == 3.8, f"Expected 3.8, got {units}"
+        assert format_dose_ml(ml) == "0.038"
+        assert format_dose_units(units) == "3.8"
+
+    def test_100mcg_at_10000_concentration(self):
+        """100 mcg at 10000 mcg/mL = 0.01 mL = 1 unit."""
+        ml, units = calculate_dose_precision(100, 10000)
+        assert ml == 0.01, f"Expected 0.01, got {ml}"
+        assert units == 1, f"Expected 1, got {units}"
+        assert format_dose_ml(ml) == "0.01"
+        assert format_dose_units(units) == "1"

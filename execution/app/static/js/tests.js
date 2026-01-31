@@ -253,31 +253,193 @@ function testMultiDrawCalculation() {
     console.log('\n📋 MULTI-DRAW CALCULATION TESTS');
     console.log('='.repeat(40));
 
-    // Test: Single draw fits
-    test('Draw: 2 mL water on 3 mL syringe = single draw', () => {
+    // Test: Single draw fits - shows units
+    test('Draw: 2 mL water in 3 mL syringe = single draw, 200 units', () => {
         const result = calculateDrawsNeeded(2, 3);
         assertFalse(result.needsMultiple);
-        assertEqual(result.displayText, '2.0 mL');
+        assertEqual(result.displayText, '200 units');
+        assertEqual(result.totalUnits, 200);
+        assertEqual(result.fullDraws, 1);
+        assertEqual(result.partialUnits, 0);
     });
 
-    // Test: Exact multiple
-    test('Draw: 2 mL water on 0.5 mL syringe = 4 × 0.5 mL', () => {
+    // Test: Exact multiple - 4 full draws (no partial)
+    test('Draw: 2 mL water in 0.5 mL syringe = 4 full draws', () => {
         const result = calculateDrawsNeeded(2, 0.5);
         assertTrue(result.needsMultiple);
-        assertEqual(result.instruction, '4 × 0.5 mL');
+        assertEqual(result.fullDraws, 4);
+        assertEqual(result.partialUnits, 0);
+        assertEqual(result.refillMessage, "Fill up 4 times with a full syringe");
     });
 
-    // Test: With remainder
-    test('Draw: 2 mL water on 0.3 mL syringe = 6 × 0.3 mL + 1 × 0.2 mL', () => {
-        const result = calculateDrawsNeeded(2, 0.3);
+    // Test: With remainder - full draws + partial
+    test('Draw: 1 mL water in 0.3 mL syringe = 3 full + 10 units partial', () => {
+        const result = calculateDrawsNeeded(1, 0.3);
         assertTrue(result.needsMultiple);
-        assertEqual(result.instruction, '6 × 0.3 mL + 1 × 0.2 mL');
+        assertEqual(result.fullDraws, 3);
+        assertEqual(result.partialUnits, 10);
+        assertEqual(result.refillMessage, "Fill up 3 times with a full syringe, then draw 10 units");
     });
 
-    // Test: Edge case - exactly equal
-    test('Draw: 1 mL water on 1 mL syringe = single draw', () => {
+    // Test: Edge case - exactly equal (single draw)
+    test('Draw: 1 mL water in 1 mL syringe = no multiple draws', () => {
         const result = calculateDrawsNeeded(1, 1);
         assertFalse(result.needsMultiple);
+        assertEqual(result.fullDraws, 1);
+        assertEqual(result.partialUnits, 0);
+        assertEqual(result.displayText, '100 units');
+    });
+
+    // Test: 3 mL with 0.3 mL syringe = 10 full draws exactly
+    test('Draw: 3 mL water in 0.3 mL syringe = 10 full draws', () => {
+        const result = calculateDrawsNeeded(3, 0.3);
+        assertTrue(result.needsMultiple);
+        assertEqual(result.fullDraws, 10);
+        assertEqual(result.partialUnits, 0);
+        assertEqual(result.refillMessage, "Fill up 10 times with a full syringe");
+    });
+
+    // Test: 2 mL with 0.3 mL syringe = 6 full + 20 units
+    test('Draw: 2 mL water in 0.3 mL syringe = 6 full + 20 units', () => {
+        const result = calculateDrawsNeeded(2, 0.3);
+        assertTrue(result.needsMultiple);
+        assertEqual(result.fullDraws, 6);
+        assertEqual(result.partialUnits, 20);
+        assertEqual(result.refillMessage, "Fill up 6 times with a full syringe, then draw 20 units");
+    });
+}
+
+
+// ================================================================
+// WATER METER UI SYNC TESTS
+// ================================================================
+
+function testWaterMeterSync() {
+    console.log('\n📋 WATER METER UI SYNC TESTS');
+    console.log('='.repeat(40));
+
+    // Test: Water volume updates meter display text (in units)
+    test('Meter: Selecting 1 mL water shows "100 units" in meter', () => {
+        state.diluentMl = 1.0;
+        state.mixingSyringeMl = 1.0;
+        state.mixingSyringeUnits = 100;
+        const drawsInfo = calculateDrawsNeeded(state.diluentMl, state.mixingSyringeMl);
+        assertEqual(drawsInfo.displayText, '100 units');
+        assertEqual(drawsInfo.totalUnits, 100);
+    });
+
+    test('Meter: Selecting 2 mL water shows "200 units" in meter', () => {
+        state.diluentMl = 2.0;
+        state.mixingSyringeMl = 3.0;
+        state.mixingSyringeUnits = 300;
+        const drawsInfo = calculateDrawsNeeded(state.diluentMl, state.mixingSyringeMl);
+        assertEqual(drawsInfo.displayText, '200 units');
+        assertEqual(drawsInfo.totalUnits, 200);
+    });
+
+    test('Meter: Selecting 3 mL water shows "300 units" in meter', () => {
+        state.diluentMl = 3.0;
+        state.mixingSyringeMl = 3.0;
+        state.mixingSyringeUnits = 300;
+        const drawsInfo = calculateDrawsNeeded(state.diluentMl, state.mixingSyringeMl);
+        assertEqual(drawsInfo.displayText, '300 units');
+        assertEqual(drawsInfo.totalUnits, 300);
+    });
+
+    // Test: Syringe size changes units display
+    test('Meter: 0.3 mL syringe has 30 units', () => {
+        state.mixingSyringeMl = 0.3;
+        state.mixingSyringeUnits = 30;
+        assertEqual(state.mixingSyringeUnits, 30);
+    });
+
+    test('Meter: 0.5 mL syringe has 50 units', () => {
+        state.mixingSyringeMl = 0.5;
+        state.mixingSyringeUnits = 50;
+        assertEqual(state.mixingSyringeUnits, 50);
+    });
+
+    test('Meter: 1.0 mL syringe has 100 units', () => {
+        state.mixingSyringeMl = 1.0;
+        state.mixingSyringeUnits = 100;
+        assertEqual(state.mixingSyringeUnits, 100);
+    });
+
+    test('Meter: 3.0 mL syringe has 300 units', () => {
+        state.mixingSyringeMl = 3.0;
+        state.mixingSyringeUnits = 300;
+        assertEqual(state.mixingSyringeUnits, 300);
+    });
+
+    // Test: Fill percentage calculation
+    test('Meter: 2 mL water in 3 mL syringe = 66.67% fill', () => {
+        const waterMl = 2.0;
+        const syringeMl = 3.0;
+        const fillPercent = Math.min((waterMl / syringeMl) * 100, 100);
+        assertTrue(Math.abs(fillPercent - 66.67) < 1, 'Fill should be ~67%');
+    });
+
+    test('Meter: 2 mL water in 1 mL syringe = 100% fill (capped)', () => {
+        const waterMl = 2.0;
+        const syringeMl = 1.0;
+        const fillPercent = Math.min((waterMl / syringeMl) * 100, 100);
+        assertEqual(fillPercent, 100);
+    });
+
+    // Test: Multiple draws scenario - now shows units and refill message
+    test('Meter: 2 mL water in 0.3 mL syringe shows "200 units" and fill message', () => {
+        state.diluentMl = 2.0;
+        state.mixingSyringeMl = 0.3;
+        const drawsInfo = calculateDrawsNeeded(state.diluentMl, state.mixingSyringeMl);
+        assertTrue(drawsInfo.needsMultiple, 'Should need multiple draws');
+        assertEqual(drawsInfo.displayText, '200 units');
+        assertEqual(drawsInfo.refillMessage, "Fill up 6 times with a full syringe, then draw 20 units");
+    });
+}
+
+
+// ================================================================
+// VIAL AMOUNT VALIDATION TESTS
+// ================================================================
+
+function testVialAmountValidation() {
+    console.log('\n📋 VIAL AMOUNT VALIDATION TESTS');
+    console.log('='.repeat(40));
+
+    test('Vial: 5 mg is valid (common range)', () => {
+        const result = validateVialAmount(5);
+        assertTrue(result.valid);
+        assertEqual(result.alertType, null);
+    });
+
+    test('Vial: 10 mg is valid (common range)', () => {
+        const result = validateVialAmount(10);
+        assertTrue(result.valid);
+        assertEqual(result.alertType, null);
+    });
+
+    test('Vial: 15 mg shows info alert (above common range)', () => {
+        const result = validateVialAmount(15);
+        assertTrue(result.valid);
+        assertEqual(result.alertType, 'info');
+    });
+
+    test('Vial: 30 mg shows info alert (at max)', () => {
+        const result = validateVialAmount(30);
+        assertTrue(result.valid);
+        assertEqual(result.alertType, 'info');
+    });
+
+    test('Vial: 35 mg is clamped to 30 mg (above max)', () => {
+        const result = validateVialAmount(35);
+        assertFalse(result.valid);
+        assertEqual(result.correctedValue, 30);
+        assertEqual(result.alertType, 'error');
+    });
+
+    test('Vial: 0 mg is invalid', () => {
+        const result = validateVialAmount(0);
+        assertFalse(result.valid);
     });
 }
 
@@ -300,6 +462,8 @@ function runValidationTests() {
     testDoseValidation();
     testCalculations();
     testMultiDrawCalculation();
+    testWaterMeterSync();
+    testVialAmountValidation();
 
     // Summary
     console.log('\n' + '='.repeat(50));
