@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Clearmix - Peptide reconstitution calculator. Turn confusing mg-to-mL conversions into clear, verified steps.">
+
+    <title>Clearmix | Mix with Confidence</title>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ECLH0TYVLB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-ECLH0TYVLB');
+
+        // Clearmix custom event tracking helper
+        function trackEvent(eventName, params = {}) {
+            gtag('event', eventName, {
+                'event_category': 'clearmix',
+                'timestamp': new Date().toISOString(),
+                ...params
+            });
+            console.log('📊 Event tracked:', eventName, params);
+        }
+    </script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="static/css/styles.css">
+
+    
+</head>
+
+<body>
+    <div class="app-container">
+        
+<main class="calculator-main">
+    <header class="header">
+        <p class="label label--accent">Peptide Calculator</p>
+        <h1 class="header__title">Clearmix</h1>
+        <p class="header__tagline">Mix and measure with confidence</p>
+    </header>
+
+    <!-- Mode Selector -->
+    <nav class="mode-nav" id="mode-nav">
+        <button class="mode-btn mode-btn--active" data-mode="mixing" id="mode-mixing-btn">
+            <span class="mode-btn__label">Mixing</span>
+            <span class="mode-btn__desc">Reconstitute</span>
+        </button>
+        <button class="mode-btn" data-mode="dosing" id="mode-dosing-btn">
+            <span class="mode-btn__label">Dosing</span>
+            <span class="mode-btn__desc">Self-administration</span>
+        </button>
+    </nav>
+
+    <!-- ============================================
+         MIXING SCREEN
+         ============================================ -->
+    <section class="screen" id="mixing-screen">
+        <section class="disclaimer">
+            <strong>Note:</strong> This tool provides math and measurement guidance only.
+            Always confirm with your prescriber.
+        </section>
+
+        <!-- STEP 1: Clean Vials -->
+        <section class="card step-card-v2" id="step-clean">
+            <div class="step-header">
+                <span class="step-badge-v2">1</span>
+                <span class="step-title">Clean Your Vials</span>
+            </div>
+            <p class="step-description">
+                Wipe the tops of both your peptide vial and bacteriostatic water vial with an alcohol swab.
+                <strong>Let dry completely</strong> before proceeding.
+            </p>
+        </section>
+
+        <!-- STEP 2: Vial Info -->
+        <section class="card step-card-v2" id="step-vial">
+            <!-- Decorative Vial Icon -->
+            <svg class="step-icon-vial" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 4h10" />
+                <path d="M7 4v2h10V4" />
+                <path d="M9 6v3h6V6" />
+                <rect x="6" y="9" width="12" height="11" rx="2" />
+                <path d="M10 13h4" />
+                <path d="M10 16h4" />
+            </svg>
+
+            <div class="step-header">
+                <span class="step-badge-v2">2</span>
+                <span class="step-title">What's in Your Vial?</span>
+            </div>
+
+            <div class="input-group">
+                <label class="input-group__label">Peptide amount</label>
+                <p class="input-group__hint">
+                    Check the label on your vial.
+                    <em class="example">Example: A vial labeled "BPC-157 5mg" contains 5 mg.</em>
+                </p>
+                <div class="preset-group" id="vial-presets">
+                    <button type="button" class="preset-btn" data-value="5">5 mg</button>
+                    <button type="button" class="preset-btn preset-btn--active" data-value="10">10 mg</button>
+                    <button type="button" class="preset-btn" data-value="15">15 mg</button>
+                    <button type="button" class="preset-btn" data-value="custom">Other</button>
+                </div>
+                <div class="input-with-unit mt-4" id="custom-vial-input" style="display: none;">
+                    <input type="number" class="input input--number" id="vial-mg-custom" placeholder="5-30 mg" min="0.1"
+                        max="30" step="0.1">
+                    <span class="input-with-unit__suffix">mg</span>
+                </div>
+                <!-- Inline alerts for vial amount -->
+                <div class="inline-alert inline-alert--error" id="vial-alert-error"></div>
+                <div class="inline-alert inline-alert--info" id="vial-alert-info"></div>
+            </div>
+        </section>
+
+        <!-- STEP 3: Add Water -->
+        <section class="card step-card-v2" id="step-water">
+            <div class="step-header">
+                <span class="step-badge-v2">3</span>
+                <span class="step-title">Add Bacteriostatic Water</span>
+            </div>
+
+            <div class="input-group">
+                <label class="input-group__label">Water volume</label>
+                <p class="input-group__hint">
+                    The amount of water you add determines the concentration.
+                    <strong>More water = less concentrated.</strong>
+
+                </p>
+                <div class="preset-group" id="water-presets">
+                    <button type="button" class="preset-btn" data-value="1.0">1 mL</button>
+                    <button type="button" class="preset-btn preset-btn--active" data-value="2.0">2 mL</button>
+                    <button type="button" class="preset-btn" data-value="3.0">3 mL</button>
+                    <button type="button" class="preset-btn" data-value="custom">Other</button>
+                </div>
+                <div class="input-with-unit mt-4" id="custom-water-input" style="display: none;">
+                    <input type="number" class="input input--number" id="diluent-ml-custom" placeholder="1-10 mL"
+                        min="1" max="10" step="0.5">
+                    <span class="input-with-unit__suffix">mL</span>
+                </div>
+                <!-- Inline alert for water volume -->
+                <div class="inline-alert inline-alert--error" id="water-alert-error"></div>
+                <div class="inline-alert inline-alert--info" id="water-alert-info"></div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-group__label">Syringe for mixing</label>
+                <p class="input-group__hint">
+                    Select your syringe size. Most people use one size for mixing and dosing.
+                </p>
+                <div class="preset-group" id="mixing-syringe-presets">
+                    <button type="button" class="preset-btn" data-value="0.3" data-units="30">0.3 mL</button>
+                    <button type="button" class="preset-btn" data-value="0.5" data-units="50">0.5 mL</button>
+                    <button type="button" class="preset-btn preset-btn--active" data-value="1.0" data-units="100">1.0
+                        mL</button>
+                </div>
+                <div class="input-with-unit mt-4" id="custom-mixing-syringe-input" style="display: none;">
+                    <input type="number" class="input input--number" id="mixing-syringe-custom" placeholder="Enter mL"
+                        min="0.1" step="0.1">
+                    <span class="input-with-unit__suffix">mL</span>
+                </div>
+            </div>
+
+            <!-- Water Draw Meter - Visual guide for this step -->
+            <div class="syringe-meter" id="water-meter">
+                <p class="syringe-meter__title">
+                    Draw <span class="highlight" id="water-meter-draw">200 units</span> of bacteriostatic water
+                </p>
+
+                <!-- Multiple draws instruction -->
+                <!-- Visual Instructions Container -->
+                <div id="visual-draw-container" class="visual-draw-grid" style="display: none;">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Legacy meter removed in favor of visual instructions
+                <div class="syringe-meter__track">
+                    <div class="syringe-meter__fill" id="water-meter-fill"></div>
+                    <div class="syringe-meter__marker" id="water-meter-marker"></div>
+                    <div class="syringe-meter__scale" id="water-meter-scale"></div>
+                </div>
+                <!-- Ticks generated by JS based on syringe size -->
+
+                <p class="syringe-meter__info">
+                    Using <span id="water-meter-syringe-label">1.0 mL</span> syringe (<span
+                        id="water-meter-total-units">100</span> units)
+                </p>
+            </div>
+
+            <div class="step-instruction-box">
+                <strong>📍 Inject slowly into the peptide vial</strong>
+                <p>Aim water at the side of the vial, not directly on the powder.</p>
+            </div>
+        </section>
+
+        <!-- STEP 4: Mix Gently -->
+        <!-- STEP 4: Mix Gently -->
+        <section class="card step-card-v2" id="step-mix">
+            <div class="step-header">
+                <span class="step-badge-v2">4</span>
+                <span class="step-title">Mix Gently</span>
+            </div>
+            <p class="step-description">
+                Roll the vial gently between your palms until the powder is fully dissolved.
+                <strong class="warning-text">Do not shake</strong> – shaking can damage the peptide.
+            </p>
+            <p class="step-secondary-text"
+                style="color: var(--color-text-secondary); font-size: 0.9rem; margin-top: 1rem;">
+                The concentration in your vial is <span id="final-concentration-text"
+                    style="color: var(--color-text-primary); font-weight: 500;">--</span>
+            </p>
+        </section>
+
+        <!-- Continue Action -->
+        <div class="text-center mt-6 mb-8">
+            <button class="btn btn--primary" id="go-to-dosing-btn">
+                Continue to Dosing →
+            </button>
+        </div>
+    </section>
+
+
+    <!-- ============================================
+         DOSING SCREEN  
+         ============================================ -->
+    <section class="screen" id="dosing-screen" style="display: none;">
+        <section class="disclaimer">
+            <strong>Note:</strong> This tool provides math and measurement guidance only.
+            Always confirm with your prescriber.
+        </section>
+
+        <!-- 1. Your Dose (STEP 1) -->
+        <section class="card step-card-v2">
+            <div class="step-header">
+                <span class="step-badge-v2">1</span>
+                <span class="step-title">What's your prescribed dose?</span>
+            </div>
+
+            <div class="input-group">
+                <label class="input-group__label">How much do you need per injection?</label>
+                <div class="input-with-unit dose-input-highlight" style="max-width: 160px;">
+                    <input type="number" class="input input--number dose-input" id="dose-mcg" placeholder="250" min="50"
+                        max="1000" step="50">
+                    <span class="input-with-unit__suffix">mcg</span>
+                </div>
+                <!-- Inline alerts for dose validation -->
+                <div class="inline-alert inline-alert--info" id="dose-alert-info"></div>
+                <div class="inline-alert inline-alert--warning" id="dose-alert-warning"></div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-group__label">Select syringe for dosing</label>
+                <div class="preset-group" id="dosing-syringe-presets">
+                    <button type="button" class="preset-btn" data-value="0.3" data-units="30">
+                        0.3 mL
+                        <span class="mode-btn__desc">30 units</span>
+                    </button>
+                    <button type="button" class="preset-btn preset-btn--active" data-value="0.5" data-units="50">
+                        0.5 mL
+                        <span class="mode-btn__desc">50 units</span>
+                    </button>
+                    <button type="button" class="preset-btn" data-value="1.0" data-units="100">
+                        1.0 mL
+                        <span class="mode-btn__desc">100 units</span>
+                    </button>
+                </div>
+            </div>
+
+
+        </section>
+
+        <!-- Your Mixed Vial (Reference) -->
+        <section class="card card--info" style="opacity: 0.9; position: relative;">
+            <!-- Decorative Filled Vial Icon -->
+            <svg class="step-icon-vial" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 4h10" />
+                <path d="M7 4v2h10V4" />
+                <path d="M9 6v3h6V6" />
+                <!-- Vial Body -->
+                <rect x="6" y="9" width="12" height="11" rx="2" />
+                <!-- Water Fill (60%) -->
+                <path d="M6 14h12v4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-4z" fill="currentColor" stroke="none"
+                    style="opacity: 0.5;" />
+                <!-- Water Surface Line -->
+                <path d="M6 14h12" />
+            </svg>
+
+            <div class="card__header">
+                <span class="step-title" style="font-size: 0.9rem; color: var(--color-text-secondary);">Your Mixed Vial
+                    Concentration</span>
+            </div>
+            <div class="info-row">
+                <span><span id="dose-vial-mg">10</span> mg peptide</span>
+                <span>+</span>
+                <span><span id="dose-water-ml">2</span> mL water</span>
+                <span>=</span>
+                <span class="highlight"><span id="dose-concentration">5000</span> mcg/mL</span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.5rem;">
+                Doses per vial: <strong style="color: var(--color-text-primary);"><span
+                        id="result-num-doses">--</span></strong>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: 0.5rem; text-align: right;">
+                Need to change this? <button class="btn-link" id="edit-mixing-btn" style="font-size: 0.8rem;">Go to
+                    Mixing view</button>
+            </p>
+
+
+        </section>
+
+        <!-- 2. Dosing Result (STEP 2) -->
+        <section class="card result-card result-card--primary step-card-v2" id="dosing-result" style="display: none;">
+            <div class="step-header">
+                <span class="step-badge-v2 step-badge--result">2</span>
+                <span class="step-title">Draw This Amount</span>
+            </div>
+
+            <div class="result-primary" style="text-align: center; padding: 0.75rem 0;">
+                <p style="margin: 0; line-height: 1.4;">
+                    <span style="color: var(--color-text-secondary); font-size: 0.95rem;">Pull the syringe to </span>
+                    <span style="font-size: 2rem; font-weight: 700; color: var(--color-accent);"><span
+                            id="result-dose-units">--</span></span>
+                    <span style="font-size: 1rem; color: var(--color-text-primary); font-weight: 500;"> units</span>
+                    <span style="color: var(--color-text-secondary); font-size: 0.9rem;"> (<span
+                            id="result-dose-ml">--</span> mL) for your <span id="summary-dose">--</span> mcg dose</span>
+                </p>
+            </div>
+
+            <!-- Visual Syringe (Dynamic) -->
+            <div class="visual-draw-container" id="dose-visual-container" style="padding: 1rem 0;">
+                <!-- Rendered by JS -->
+            </div>
+
+            <p class="syringe-meter__info"
+                style="text-align: center; margin-top: 0.5rem; color: var(--color-text-secondary); font-size: 0.9rem;">
+                Using <span id="dose-meter-syringe-label">0.5 mL</span> syringe (<span
+                    id="dose-meter-total-units">50</span>
+                units)
+            </p>
+
+        </section>
+
+        <div class="text-center mt-6 mb-6">
+            <button class="btn btn--ghost" id="back-to-mixing-btn">
+                ← Back to Mixing
+            </button>
+        </div>
+    </section>
+</main>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="static/js/analytics.js"></script>
+    <script src="static/js/calculator.js"></script>
+    <script src="static/js/tests.js"></script>
+    
+</body>
+
+</html>

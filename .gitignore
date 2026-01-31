@@ -2,3 +2,7 @@
 .env
 credentials.json
 token.json
+build/
+.venv/
+__pycache__/
+*.pyc

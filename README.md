@@ -4,16 +4,16 @@
 
 Mix and measure with confidence.
 
-![Version](https://img.shields.io/badge/version-0.3.0--pre-blue)
-![Status](https://img.shields.io/badge/status-Release%20Candidate-orange)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Status](https://img.shields.io/badge/status-Stable-green)
 
 ## Overview
 
 Clearmix is a web-based calculator that helps users accurately reconstitute peptide vials and calculate precise dosing. The tool guides users through the math of mixing bacteriostatic water with peptide powder and determining the correct syringe draw volume for their prescribed dose.
 
-## Features (v0.3.0-pre)
+## Features (v1.0.0)
 
-### 🛡️ Input Validation & Safety (New)
+### 🛡️ Input Validation & Safety
 - **Smart Logic**: Prevents unsafe inputs (e.g., zero/negative values).
 - **Vial Safety**: Clamps maximum vial amount to 30mg to prevent magnitude errors.
 - **Dose Warnings**: Alerts users to unusually high doses (>500mcg info, >1000mcg warning).
@@ -23,10 +23,11 @@ Clearmix is a web-based calculator that helps users accurately reconstitute pept
 - **Mixing Screen**: Calculate how to reconstitute your peptide vial
 - **Dosing Screen**: Calculate the exact draw volume for your dose
 
-### Visual Syringe Meter
-- Horizontal scale visualization showing exactly where to draw
-- Dynamic tick marks that adjust based on syringe size (0.3, 0.5, 1.0, 3.0 mL)
-- Clear "draw to X units" guidance
+### Enhanced Visual Syringe Meter
+- **Granular Scales**: Precise tick marks for 0.3, 0.5, and 1.0 mL syringes (tick per unit, label per 5).
+- **Dynamic Optimization**: Scale adapts to syringe size for maximum readability.
+- **Visual Accuracy**: Alignment and padding perfected for reliable reading.
+- **Clear Guidance**: "Draw to X units" instructions with highlighting.
 
 ### Smart Draw Calculations
 - Automatically calculates multiple draws when volume exceeds syringe capacity
@@ -93,7 +94,7 @@ ClearMix/
 
 - [x] Phase 1: Core calculator with two-screen mode
 - [x] Phase 1.5: Comprehensive Input Validation & Safety
-- [ ] Phase 2: Syringe visual enhancement
+- [x] Phase 2: Syringe visual enhancement (Granular scales, Precise alignment)
 - [ ] Phase 3: Mobile responsiveness
 - [ ] Phase 4: Local storage for preferences
 - [ ] Phase 5: A/B testing and analytics
