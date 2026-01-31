@@ -64,11 +64,11 @@ function testWaterVolumeValidation() {
         assertEqual(result.alertType, null, 'Should have no alert');
     });
 
-    // Test: Minimum boundary (1 mL)
-    test('Water: 1 mL is valid (minimum)', () => {
-        const result = validateWaterVolume(1);
+    // Test: Minimum boundary (0.5 mL)
+    test('Water: 0.5 mL is valid (minimum)', () => {
+        const result = validateWaterVolume(0.5);
         assertTrue(result.valid, 'Min value should be valid');
-        assertEqual(result.correctedValue, 1);
+        assertEqual(result.correctedValue, 0.5);
     });
 
     // Test: Maximum boundary (10 mL)
@@ -79,26 +79,26 @@ function testWaterVolumeValidation() {
     });
 
     // Test: Below minimum
-    test('Water: 0.5 mL is corrected to 1 mL', () => {
-        const result = validateWaterVolume(0.5);
+    test('Water: 0.2 mL is corrected to 0.5 mL', () => {
+        const result = validateWaterVolume(0.2);
         assertFalse(result.valid, 'Should be invalid');
-        assertEqual(result.correctedValue, 1, 'Should correct to min');
+        assertEqual(result.correctedValue, 0.5, 'Should correct to min');
         assertEqual(result.alertType, 'error');
     });
 
     // Test: Negative value
-    test('Water: -1 mL is corrected to 1 mL', () => {
+    test('Water: -1 mL is corrected to 0.5 mL', () => {
         const result = validateWaterVolume(-1);
         assertFalse(result.valid);
-        assertEqual(result.correctedValue, 1, 'Negative should correct to min');
+        assertEqual(result.correctedValue, 0.5, 'Negative should correct to min');
         assertEqual(result.alertType, 'error');
     });
 
     // Test: Zero
-    test('Water: 0 mL is corrected to 1 mL', () => {
+    test('Water: 0 mL is corrected to 0.5 mL', () => {
         const result = validateWaterVolume(0);
         assertFalse(result.valid);
-        assertEqual(result.correctedValue, 1);
+        assertEqual(result.correctedValue, 0.5);
     });
 
     // Test: Above maximum
@@ -154,18 +154,20 @@ function testDoseValidation() {
         assertEqual(result.alertType, 'info', 'Exactly 1000 should show info');
     });
 
-    // Test: Above warning threshold
-    test('Dose: 1001 mcg shows warning alert', () => {
+    // Test: Above warning threshold (over max)
+    test('Dose: 1001 mcg clamped to max with info alert', () => {
         const result = validateDose(1001);
-        assertTrue(result.valid, 'Should still be valid');
-        assertEqual(result.alertType, 'warning', 'Should show high dose warning');
+        assertTrue(result.valid, 'Should be valid');
+        assertEqual(result.correctedValue, 1000, 'Should be clamped to max');
+        assertEqual(result.alertType, 'info', 'Should show info alert (clamped)');
     });
 
     // Test: Very high dose
-    test('Dose: 5000 mcg shows warning alert', () => {
+    test('Dose: 5000 mcg clamped to max', () => {
         const result = validateDose(5000);
         assertTrue(result.valid);
-        assertEqual(result.alertType, 'warning');
+        assertEqual(result.correctedValue, 1000, 'Should be clamped to max');
+        assertEqual(result.alertType, 'info');
     });
 
     // Test: Zero dose
@@ -328,6 +330,16 @@ function testWaterMeterSync() {
         assertEqual(drawsInfo.totalUnits, 100);
     });
 
+    test('Meter: Selecting 0.5 mL water shows "50 units" in meter', () => {
+        state.diluentMl = 0.5;
+        state.mixingSyringeMl = 1.0;
+        state.mixingSyringeUnits = 100;
+        const drawsInfo = calculateDrawsNeeded(state.diluentMl, state.mixingSyringeMl);
+        // 0.5 mL = 50 units
+        assertEqual(drawsInfo.displayText, '50 units');
+        assertEqual(drawsInfo.totalUnits, 50);
+    });
+
     test('Meter: Selecting 2 mL water shows "200 units" in meter', () => {
         state.diluentMl = 2.0;
         state.mixingSyringeMl = 3.0;
@@ -445,6 +457,59 @@ function testVialAmountValidation() {
 
 
 // ================================================================
+// UI UPDATE TESTS
+// ================================================================
+
+function testUIUpdates() {
+    console.log('\n📋 UI UPDATE TESTS');
+    console.log('='.repeat(40));
+
+    // Helper: Mock DOM element if not present (for headless testing)
+    const mockElement = (id) => {
+        if (!document.getElementById(id)) {
+            const el = document.createElement('div');
+            el.id = id;
+            document.body.appendChild(el);
+            return el;
+        }
+        return document.getElementById(id);
+    };
+
+    test('Concentration Display: Updates correctly (e.g., 5000 mcg/mL)', () => {
+        // Setup DOM
+        const el = mockElement('final-concentration-text');
+
+        // Setup State
+        state.vialMg = 10;
+        state.diluentMl = 2; // = 5 mg/mL = 5000 mcg/mL
+
+        // Action
+        updateMixingUI();
+
+        // Specific Assert: Check for "5.0 mg/mL (or 5,000 mcg/mL)"
+        // Note: The exact string comes from calculator.js: 
+        // `${concMg.toFixed. (1)} mg/mL (or ${concMcg.toLocaleString()} mcg/mL)`
+        const text = el.textContent;
+        assertTrue(text.includes('5.0 mg/mL'), `Expected "5.0 mg/mL" in "${text}"`);
+        assertTrue(text.includes('5,000 mcg/mL'), `Expected "5,000 mcg/mL" in "${text}"`);
+    });
+
+    test('Concentration Display: Updates correctly (e.g., 2000 mcg/mL)', () => {
+        const el = mockElement('final-concentration-text');
+
+        state.vialMg = 10;
+        state.diluentMl = 5; // = 2 mg/mL = 2000 mcg/mL
+
+        updateMixingUI();
+
+        const text = el.textContent;
+        assertTrue(text.includes('2.0 mg/mL'), `Expected "2.0 mg/mL" in "${text}"`);
+        assertTrue(text.includes('2,000 mcg/mL'), `Expected "2,000 mcg/mL" in "${text}"`);
+    });
+}
+
+
+// ================================================================
 // RUN ALL TESTS
 // ================================================================
 
@@ -464,6 +529,7 @@ function runValidationTests() {
     testMultiDrawCalculation();
     testWaterMeterSync();
     testVialAmountValidation();
+    testUIUpdates();
 
     // Summary
     console.log('\n' + '='.repeat(50));

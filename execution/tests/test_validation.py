@@ -11,7 +11,7 @@ import pytest
 # ----------------------------------------------------------------------
 
 CONSTRAINTS = {
-    "water": {"min": 1, "max": 10},
+    "water": {"min": 0.5, "max": 10},
     "dose": {"cautionThreshold": 500, "warningThreshold": 1000},
     "vial": {"min": 0.1, "max": 30, "commonMin": 5, "commonMax": 10},
 }
@@ -127,7 +127,7 @@ def test_water_invalid_strings(bad_input):
 # Negative / zero handling
 # ----------------------------------------------------------------------
 
-@pytest.mark.parametrize("val,expected", [(-5, 1), (0, 1)])
+@pytest.mark.parametrize("val,expected", [(-5, 0.5), (0, 0.5)])
 def test_water_negative_clamps(val, expected):
     res = validate_water_volume(val)
     assert res["valid"] is False

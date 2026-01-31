@@ -45,7 +45,7 @@ const state = {
 
 const CONSTRAINTS = {
     water: {
-        min: 1,
+        min: 0.5,
         max: 10,
         unit: 'mL'
     },
@@ -68,6 +68,16 @@ const CONSTRAINTS = {
 // ================================================================
 // VALIDATION FUNCTIONS
 // ================================================================
+
+/**
+ * Set the water volume directly (e.g. from presets)
+ * @param {number} vol - Volume in mL
+ */
+function setWaterVolume(vol) {
+    state.diluentMl = vol;
+    state.validationErrors.water = false;
+    updateMixingUI();
+}
 
 /**
  * Validate water volume input
@@ -578,68 +588,49 @@ function initVialPresets() {
 }
 
 function initWaterPresets() {
-    const waterPresets = document.getElementById('water-presets');
+    const container = document.getElementById('water-presets');
     const customInput = document.getElementById('custom-water-input');
     const customField = document.getElementById('diluent-ml-custom');
 
-    waterPresets.addEventListener('click', (e) => {
+    if (!container) return;
+
+    container.addEventListener('click', (e) => {
         const btn = e.target.closest('.preset-btn');
         if (!btn) return;
 
-        waterPresets.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('preset-btn--active'));
+        container.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('preset-btn--active'));
         btn.classList.add('preset-btn--active');
 
-        const value = btn.dataset.value;
-        if (value === 'custom') {
+        const val = btn.dataset.value;
+
+        if (val === 'custom') {
             customInput.style.display = 'flex';
-            customField.focus();
-            // Validate current value
-            const enteredValue = parseFloat(customField.value);
-            const validation = validateWaterVolume(enteredValue);
-            state.diluentMl = validation.correctedValue || null;
+            if (customField) customField.focus();
         } else {
             customInput.style.display = 'none';
-            // Preset values are always valid, clear alerts
-            hideAlert('water-alert-error');
-            hideAlert('water-alert-info');
-            state.diluentMl = parseFloat(value);
+            setWaterVolume(parseFloat(val));
         }
-        updateMixingUI();
     });
 
-    customField.addEventListener('input', (e) => {
-        const enteredValue = parseFloat(e.target.value);
-        const validation = validateWaterVolume(enteredValue);
+    if (customField) {
+        customField.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            const validation = validateWaterVolume(val);
 
-        if (validation.correctedValue !== null && validation.correctedValue !== enteredValue) {
-            // Value was corrected - update the input field
-            e.target.value = validation.correctedValue;
-            state.diluentMl = validation.correctedValue;
-        } else {
-            state.diluentMl = enteredValue || null;
-        }
+            // Only update state if valid or purely typing
+            // (We handle validation errors visually via validation result)
+            if (!isNaN(val)) {
+                state.diluentMl = val;
+            }
 
-        // Add/remove error class on input
-        if (validation.alertType === 'error') {
-            e.target.classList.add('input--error');
-        } else {
-            e.target.classList.remove('input--error');
-        }
-
-        updateMixingUI();
-    });
-
-    // Also validate on blur (when leaving field)
-    customField.addEventListener('blur', (e) => {
-        const enteredValue = parseFloat(e.target.value);
-        const validation = validateWaterVolume(enteredValue);
-
-        if (validation.correctedValue !== null && validation.correctedValue !== enteredValue) {
-            e.target.value = validation.correctedValue;
-            state.diluentMl = validation.correctedValue;
+            if (validation.alertType === 'error') {
+                e.target.classList.add('input--error');
+            } else {
+                e.target.classList.remove('input--error');
+            }
             updateMixingUI();
-        }
-    });
+        });
+    }
 }
 
 function initMixingSyringePresets() {
