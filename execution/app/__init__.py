@@ -21,13 +21,13 @@ def create_app(config=None):
         app.config.update(config)
     
     # Inject build time into templates
-    from datetime import datetime
+    from datetime import datetime, timezone
     
     @app.context_processor
     def inject_build_info():
-        # Use Pacific Time for clarity if possible, else local/UTC
-        now = datetime.now()
-        ts = now.strftime("%b %d, %Y - %H:%M %p")
+        # Use UTC to match GitHub Actions environment
+        now = datetime.now(timezone.utc)
+        ts = now.strftime("%b %d, %Y - %H:%M UTC")
         return {'build_timestamp': ts}
     
     # Register routes

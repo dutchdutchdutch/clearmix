@@ -28,6 +28,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r execution/requirements.txt
 
+      - name: Run Tests
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/execution
+          pytest execution/tests
+
       - name: Build static site
         run: |
           # Set PYTHONPATH so execution/app can be imported
