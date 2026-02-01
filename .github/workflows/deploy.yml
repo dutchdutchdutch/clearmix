@@ -18,9 +18,15 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Install dependencies
+      - name: Debug Environment
         run: |
-          pip install -r execution/requirements.txt
+          pwd
+          ls -R execution
+          python --version
+          pip --version
+
+      - name: Install dependencies
+        run: pip install -r execution/requirements.txt
 
       - name: Build static site
         run: |
