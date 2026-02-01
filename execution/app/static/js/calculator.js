@@ -588,15 +588,21 @@ function initVialPresets() {
 }
 
 function initWaterPresets() {
+    console.log('💧 Initializing Water Presets');
     const container = document.getElementById('water-presets');
     const customInput = document.getElementById('custom-water-input');
     const customField = document.getElementById('diluent-ml-custom');
 
-    if (!container) return;
+    if (!container) {
+        console.error('❌ Water presets container not found');
+        return;
+    }
 
     container.addEventListener('click', (e) => {
         const btn = e.target.closest('.preset-btn');
         if (!btn) return;
+
+        console.log(`💧 Preset clicked: ${btn.dataset.value}`);
 
         container.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('preset-btn--active'));
         btn.classList.add('preset-btn--active');
@@ -605,7 +611,15 @@ function initWaterPresets() {
 
         if (val === 'custom') {
             customInput.style.display = 'flex';
-            if (customField) customField.focus();
+            if (customField) {
+                customField.focus();
+                // If there's already a value, ensure state is synced
+                const currentVal = parseFloat(customField.value);
+                if (!isNaN(currentVal)) {
+                    state.diluentMl = currentVal;
+                    updateMixingUI();
+                }
+            }
         } else {
             customInput.style.display = 'none';
             setWaterVolume(parseFloat(val));
@@ -613,14 +627,19 @@ function initWaterPresets() {
     });
 
     if (customField) {
+        console.log('✅ Custom water input field found');
         customField.addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
+            console.log(`💧 Custom water input: ${val}`);
+
             const validation = validateWaterVolume(val);
 
-            // Only update state if valid or purely typing
-            // (We handle validation errors visually via validation result)
+            // Only update state if purely typing a number (even if invalid range, we track it)
             if (!isNaN(val)) {
                 state.diluentMl = val;
+            } else {
+                // If empty/NaN, maybe don't update state or set to null? 
+                // Existing logic didn't unset it. Let's keep it safe.
             }
 
             if (validation.alertType === 'error') {
@@ -630,6 +649,8 @@ function initWaterPresets() {
             }
             updateMixingUI();
         });
+    } else {
+        console.error('❌ Custom water input field (#diluent-ml-custom) not found');
     }
 }
 
@@ -864,6 +885,40 @@ function renderSyringeVisual(container, targetMl, syringeMl, syringeTotalUnits) 
 // INITIALIZATION
 // ================================================================
 
+function syncStateFromDOM() {
+    console.log('🔄 Syncing state from DOM defaults...');
+
+    // 1. Vial Amount
+    const activeVialBtn = document.querySelector('#vial-presets .preset-btn--active');
+    if (activeVialBtn) {
+        state.vialMg = parseFloat(activeVialBtn.dataset.value);
+        console.log(`   Vial: ${state.vialMg} mg`);
+    }
+
+    // 2. Water Volume
+    const activeWaterBtn = document.querySelector('#water-presets .preset-btn--active');
+    if (activeWaterBtn) {
+        state.diluentMl = parseFloat(activeWaterBtn.dataset.value);
+        console.log(`   Water: ${state.diluentMl} mL`);
+    }
+
+    // 3. Mixing Syringe
+    const activeMixSyringeBtn = document.querySelector('#mixing-syringe-presets .preset-btn--active');
+    if (activeMixSyringeBtn) {
+        state.mixingSyringeMl = parseFloat(activeMixSyringeBtn.dataset.value);
+        state.mixingSyringeUnits = parseInt(activeMixSyringeBtn.dataset.units);
+        console.log(`   Mixing Syringe: ${state.mixingSyringeMl} mL`);
+    }
+
+    // 4. Dosing Syringe
+    const activeDoseSyringeBtn = document.querySelector('#dosing-syringe-presets .preset-btn--active');
+    if (activeDoseSyringeBtn) {
+        state.dosingSyringeMl = parseFloat(activeDoseSyringeBtn.dataset.value);
+        state.dosingSyringeUnits = parseInt(activeDoseSyringeBtn.dataset.units);
+        console.log(`   Dosing Syringe: ${state.dosingSyringeMl} mL`);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initModeNav();
     initVialPresets();
@@ -871,6 +926,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initMixingSyringePresets();
     initDosingSyringePresets();
     initDoseInput();
+
+    // Sync state from HTML defaults before first render
+    syncStateFromDOM();
 
     // Initial UI update
     updateMixingUI();

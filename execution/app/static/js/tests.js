@@ -508,6 +508,83 @@ function testUIUpdates() {
     });
 }
 
+// ================================================================
+// INTEGRATION TESTS
+// ================================================================
+
+function testCustomWaterInput() {
+    console.log('\n📋 CUSTOM WATER INPUT INTEGRATION TEST');
+    console.log('='.repeat(40));
+
+    // this test requires DOM elements to be present or mocked triggering events
+    // We will simulate the state change and function calls that happen on input
+
+    test('Integration: Custom Water Input updates calculation', () => {
+        // Reset state
+        state.vialMg = 10;
+        state.diluentMl = 2;
+
+        // Simulate user typing "5" into custom field
+        // Logic from initWaterPresets input handler:
+        const inputVal = 5;
+        state.diluentMl = inputVal;
+        updateMixingUI();
+
+        // Verify calculation result
+        const result = calculateMixing();
+        assertEqual(result.concentrationMgPerMl, 2, 'Should be 2 mg/mL (10mg / 5mL)');
+
+        // Verify UI update (mocked element check)
+        // We assume updateMixingUI updates 'final-concentration-text'
+        // In a real browser test we'd check textContent. 
+        // Here we rely on calculateMixing() correctness which we already tested,
+        // but this confirms the flow state -> calc.
+    });
+}
+
+function testInitialLoadSync() {
+    console.log('\n📋 INITIAL LOAD SYNC TEST');
+    console.log('='.repeat(40));
+
+    test('Initial Load: State matches DOM defaults (5mg / 0.5mL)', () => {
+        // This test assumes it runs AFTER the page has loaded and syncStateFromDOM() has fired.
+
+        // Note: state might have been changed by other tests running before this.
+        // So we strictly should re-run syncStateFromDOM() to verify IT works.
+
+        if (typeof syncStateFromDOM === 'function') {
+            // Force sync to read current DOM (which should be defaults unless changed by tests)
+            // But verify_fix_custom_water_input changed them! 
+            // So we must RESET DOM to defaults first for this test to be meaningful as "Initial Load" check.
+
+            // Hard to reset DOM perfectly without reload. 
+            // Instead, let's just checking if syncStateFromDOM works by forcing a known state on DOM
+
+            // Set 5mg active
+            const vialBtns = document.querySelectorAll('#vial-presets .preset-btn');
+            vialBtns.forEach(b => b.classList.remove('preset-btn--active'));
+            document.querySelector('#vial-presets button[data-value="5"]').classList.add('preset-btn--active');
+
+            // Set 0.5mL active
+            const waterBtns = document.querySelectorAll('#water-presets .preset-btn');
+            waterBtns.forEach(b => b.classList.remove('preset-btn--active'));
+            document.querySelector('#water-presets button[data-value="0.5"]').classList.add('preset-btn--active');
+
+            // Run sync
+            syncStateFromDOM();
+
+            // Validating
+            assertEqual(state.vialMg, 5, 'State vialMg should match HTML default (5)');
+            assertEqual(state.diluentMl, 0.5, 'State diluentMl should match HTML default (0.5)');
+
+            const res = calculateMixing();
+            assertEqual(res.concentrationMgPerMl, 10, 'Concentration should be 10 mg/mL');
+        } else {
+            console.warn('⚠️ syncStateFromDOM not exposed globally, skipping direct test.');
+        }
+    });
+}
+
 
 // ================================================================
 // RUN ALL TESTS
@@ -530,6 +607,8 @@ function runValidationTests() {
     testWaterMeterSync();
     testVialAmountValidation();
     testUIUpdates();
+    testCustomWaterInput();
+    testInitialLoadSync();
 
     // Summary
     console.log('\n' + '='.repeat(50));

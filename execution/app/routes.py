@@ -18,3 +18,6 @@ def index():
 def health():
     """Health check endpoint for monitoring."""
     return {'status': 'ok', 'app': 'clearmix'}
+
+
+
