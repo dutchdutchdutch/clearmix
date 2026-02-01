@@ -16,6 +16,8 @@ BUILD_DIR = os.path.join(BASE_DIR, 'build')
 app.config['FREEZER_DESTINATION'] = BUILD_DIR
 app.config['FREEZER_RELATIVE_URLS'] = True  # Makes it easier to host in subpaths if needed
 
+
+
 def clean_build_dir():
     """Ensure a clean build directory exists."""
     if os.path.exists(BUILD_DIR):
