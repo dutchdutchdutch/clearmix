@@ -55,7 +55,7 @@ Clearmix is a web-based calculator that helps users accurately reconstitute pept
 ### Installation
 
 ```bash
-cd execution
+cd site
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -76,12 +76,14 @@ Access at: http://127.0.0.1:5000
 ClearMix/
 ├── directives/          # Product requirements and specifications
 │   └── prd.md          # Product Requirements Document
-├── execution/           # Application code
+├── site/                # Flask web app source (edit here)
 │   ├── app/
 │   │   ├── static/     # CSS, JS assets
 │   │   └── templates/  # HTML templates
 │   ├── tests/          # Test suite
-│   └── run.py          # Entry point
+│   ├── freeze.py       # Frozen-Flask: compiles site/ → build/
+│   └── run.py          # Local dev entry point
+├── build/               # Generated static site (deployed to Firebase)
 ├── orchestration/       # Build reports and progress tracking
 └── README.md
 ```

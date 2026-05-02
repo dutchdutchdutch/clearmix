@@ -14,10 +14,10 @@ You operate within a 3-layer architecture that separates concerns to maximize re
 **Layer 2: Orchestration (Decision making)**
 - This is you. Your job: intelligent routing.
 - Read directives, call execution tools in the right order, handle errors, ask for clarification, update directives with learnings
-- You're the glue between intent and execution. E.g you don't try scraping websites yourself—you read `directives/scrape_scores.md` and come up with inputs/outputs and then run `execution/scrape_scores.py`
+- You're the glue between intent and execution. E.g you don't try scraping websites yourself—you read `directives/scrape_scores.md` and come up with inputs/outputs and then run `site/scrape_scores.py`
 
 **Layer 3: Execution (Doing the work)**
-- Deterministic Python scripts in `execution/`
+- Deterministic application code in `site/` (Flask web app, freezer, tests, plus any supporting Python scripts)
 - Environment variables, api tokens, etc are stored in `.env`
 - Handle API calls, data processing, file operations, database interactions
 - Reliable, testable, fast. Use scripts instead of manual work. Commented well.
@@ -27,7 +27,7 @@ You operate within a 3-layer architecture that separates concerns to maximize re
 ## Operating Principles
 
 **1. Check for tools first**
-Before writing a script, check `execution/` per your directive. Only create new scripts if none exist.
+Before writing a script, check `site/` per your directive. Only create new scripts if none exist.
 
 **2. Self-anneal when things break**
 - Read error message and stack trace
@@ -55,7 +55,8 @@ Errors are learning opportunities. When something breaks:
 
 **Directory structure:**
 - `.tmp/` - All intermediate files (dossiers, scraped data, temp exports). Never commit, always regenerated.
-- `execution/` - Python scripts (the deterministic tools)
+- `site/` - Flask web app source (templates, static assets, freezer, tests). Frozen-Flask compiles this into the deployable `build/` artifact.
+- `build/` - Generated static site artifact (output of `python site/freeze.py`). Deployed to Firebase Hosting per `firebase.json`. Do not edit by hand — it gets overwritten on every build.
 - `directives/` - SOPs in Markdown (the instruction set)
 - `orchestration/` - Decision guidance
 - `.env` - Environment variables and API keys

@@ -21,23 +21,23 @@ jobs:
       - name: Debug Environment
         run: |
           pwd
-          ls -R execution
+          ls -R site
           python --version
           pip --version
 
       - name: Install dependencies
-        run: pip install -r execution/requirements.txt
+        run: pip install -r site/requirements.txt
 
       - name: Run Tests
         run: |
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/execution
-          pytest execution/tests
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/site
+          pytest site/tests
 
       - name: Build static site
         run: |
-          # Set PYTHONPATH so execution/app can be imported
-          export PYTHONPATH=$PYTHONPATH:$(pwd)/execution
-          python execution/freeze.py
+          # Set PYTHONPATH so site/app can be imported
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/site
+          python site/freeze.py
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
