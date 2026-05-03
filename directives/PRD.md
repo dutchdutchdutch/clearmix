@@ -527,3 +527,94 @@ Ensure `flow_variant` on: `goal_selected, results_viewed, step_cards_viewed, flo
 * Do we include a “print/share” step card (PDF) in MVP, or Phase 2?
 
 ---
+
+## 13. Variant Architecture
+
+Clearmix serves more than one audience from the same Frozen-Flask site. Each
+audience is a **variant**: it has its own URL, presets, copy, dose units, and
+optional CSS theme. Today there are two variants:
+
+| Slug      | URL        | Default dose unit | Theme class    |
+|-----------|------------|-------------------|----------------|
+| `default` | `/`        | `mcg`             | _(none)_       |
+| `glp1`    | `/glp1/`   | `mg`              | `theme-glp1`   |
+
+### Where config lives
+
+All variant configuration lives in **`site/app/variants.py`** as immutable
+`VariantConfig` dataclasses keyed in the `VARIANTS` dict by slug. The shared
+template `site/app/templates/index.html` is variant-agnostic; it reads
+everything (presets, copy, theme class, dose units) from the `variant` it is
+rendered with.
+
+A separate dict serialization (`variant.to_dict()`) is injected into each page
+as a JSON data island:
+
+```html
+<script id="variant-config" type="application/json">{...}</script>
+```
+
+Calculator JS (`site/app/static/js/calculator.js`) parses that data island on
+init via `readVariantConfig()` and uses it for unit labels, default selections,
+preset values, and validation ranges.
+
+### How to add a third variant
+
+1. Add a new `VariantConfig(slug="myvariant", url_path="/myvariant/", ...)` to
+   `VARIANTS` in `site/app/variants.py`.
+2. Add a new route in `site/app/routes.py`:
+   ```python
+   @bp.route('/myvariant/')
+   def myvariant():
+       return _render_variant(VARIANTS['myvariant'])
+   ```
+3. If the variant needs distinct visuals, add a
+   `body.theme-myvariant { --color-*: ...; }` block to
+   `site/app/static/css/themes.css` and set `theme_class="theme-myvariant"` on
+   the config. **Do not modify global selectors** — variant styling MUST be
+   scoped under `body.theme-<slug>`.
+4. Extend `site/tests/test_app.py` with smoke assertions for the new URL and
+   the freezer test in `site/tests/test_freeze.py` (it already enumerates all
+   variants generically, so the new URL needs to be added to its expectations
+   if hard-coded).
+5. Run `python site/freeze.py` and confirm `build/myvariant/index.html` exists.
+
+### Unit-conversion contract
+
+* Internal calculations are canonical in **mcg**. The user-facing dose unit is
+  the variant's `dose_default_unit`.
+* For variants with `dose_supported_units` length > 1, a segmented in-view
+  toggle is rendered. Switching the unit MUST NOT lose the user's canonical
+  dose; it only changes the displayed unit.
+* `1 mg = 1000 mcg`. Helpers in JS: `mgToMcg`, `mcgToMg`, `formatMg`. Mirrored
+  in Python at `site/app/variants.py` for tests.
+* mg values shown to the user MUST include a leading zero (`0.25`, never
+  `.25`). `formatMg` enforces this with `Number(v).toFixed(2)`.
+
+### Theming convention
+
+* `<body class="{{ variant.theme_class }}">` is set in `base.html`.
+* CSS overrides live in `themes.css` under `body.theme-<slug> { ... }` blocks.
+  Only CSS custom properties (design tokens) are overridden; structural rules
+  belong in `styles.css`.
+* If a variant's identity needs structural style changes beyond custom-property
+  overrides, that's a signal to introduce a second template or extend the
+  variant config rather than to grow `themes.css` with selector-specific rules.
+
+### Build order
+
+Source lives in `site/app/`. Run `python site/freeze.py` only when verifying frozen output (e.g., missing route, broken relative URL). CI regenerates `build/` from `site/` on every deploy; the local `build/` is gitignored and disposable.
+
+### Test expectations
+
+* `site/tests/test_variants.py` — variant-config schema (required fields,
+  unique slugs/URLs, presets sorted, defaults in their preset lists,
+  unit-conversion contract).
+* `site/tests/test_app.py` — per-variant smoke (URL returns 200, contains
+  variant `display_name` + correct dose-unit suffix + correct body class, and
+  no leakage between variants).
+* `site/tests/test_freeze.py` — `freezer.all_urls()` enumerates `/` and
+  `/glp1/`, and freezing produces non-empty `build/index.html` and
+  `build/glp1/index.html`. Add to this when a third variant is added.
+
+---

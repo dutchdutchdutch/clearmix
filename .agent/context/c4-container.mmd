@@ -1,0 +1,32 @@
+%% C4 Container Diagram - ClearMix
+%% Shows deployable units and their relationships
+
+flowchart TB
+    subgraph Users
+        U[👤 User<br/>Browser]
+    end
+
+    subgraph Development["Development Environment"]
+        FLASK[🐍 Flask Dev Server<br/>execution/run.py<br/>Hot reload for development]
+        FREEZE[❄️ Freeze Script<br/>execution/freeze.py<br/>Generates static build]
+    end
+
+    subgraph Build["Build Artifacts"]
+        STATIC[📦 Static Build<br/>build/<br/>HTML, CSS, JS]
+    end
+
+    subgraph CI["GitHub Actions"]
+        GHA[🔄 Deploy Workflow<br/>.github/workflows/deploy.yml<br/>Test → Build → Deploy]
+    end
+
+    subgraph Production["Firebase Hosting"]
+        FIREBASE[🔥 Firebase CDN<br/>clearmix-peptides-c9a57.web.app<br/>Serves static files globally]
+    end
+
+    U -->|Local dev| FLASK
+    U -->|Production| FIREBASE
+    FLASK -->|Source for| FREEZE
+    FREEZE -->|Generates| STATIC
+    GHA -->|Runs| FREEZE
+    GHA -->|Deploys| FIREBASE
+    STATIC -->|Uploaded to| FIREBASE

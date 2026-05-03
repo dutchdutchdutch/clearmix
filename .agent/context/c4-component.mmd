@@ -1,0 +1,39 @@
+%% C4 Component Diagram - ClearMix Flask App
+%% Shows internal modules and their relationships
+
+flowchart TB
+    subgraph FlaskApp["execution/app/"]
+        INIT[__init__.py<br/>App Factory<br/>+ build_timestamp injection]
+        ROUTES[routes.py<br/>/ → index.html<br/>/health → JSON]
+    end
+
+    subgraph Templates["execution/app/templates/"]
+        INDEX[index.html<br/>Main calculator UI<br/>Jinja2 template]
+    end
+
+    subgraph Static["execution/app/static/"]
+        CSS[css/styles.css<br/>Dark theme, responsive]
+        JS_CALC[js/calculator.js<br/>Core calculation logic]
+        JS_TEST[js/tests.js<br/>Browser-based tests]
+        JS_ANALYTICS[js/analytics.js<br/>Usage tracking]
+    end
+
+    subgraph Tests["execution/tests/"]
+        TEST_APP[test_app.py<br/>Flask route tests]
+        TEST_VAL[test_validation.py<br/>Input validation tests]
+    end
+
+    subgraph Build["Build Process"]
+        FREEZE[freeze.py<br/>Flask-Frozen static generator]
+    end
+
+    INIT -->|registers| ROUTES
+    ROUTES -->|renders| INDEX
+    INDEX -->|links| CSS
+    INDEX -->|links| JS_CALC
+    INDEX -->|links| JS_TEST
+    INDEX -->|links| JS_ANALYTICS
+    FREEZE -->|imports| INIT
+    FREEZE -->|generates| BUILD_OUT[build/]
+    TEST_APP -->|tests| ROUTES
+    TEST_VAL -->|tests| JS_CALC

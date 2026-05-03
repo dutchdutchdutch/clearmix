@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/dutch/Dev/ClearMix commit -m ' *)",
+      "Bash(git -C /Users/dutch/Dev/ClearMix apply /tmp/clearmix_template_pending.patch)",
+      "Bash(git -C /Users/dutch/Dev/ClearMix log --oneline -5)",
+      "Bash(openspec --version)",
+      "Bash(openspec new *)"
+    ]
+  }
+}

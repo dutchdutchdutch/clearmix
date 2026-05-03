@@ -56,7 +56,9 @@ Errors are learning opportunities. When something breaks:
 **Directory structure:**
 - `.tmp/` - All intermediate files (dossiers, scraped data, temp exports). Never commit, always regenerated.
 - `site/` - Flask web app source (templates, static assets, freezer, tests). Frozen-Flask compiles this into the deployable `build/` artifact.
-- `build/` - Generated static site artifact (output of `python site/freeze.py`). Deployed to Firebase Hosting per `firebase.json`. Do not edit by hand — it gets overwritten on every build.
+- `build/` - Generated static site artifact (output of `python site/freeze.py`). Deployed to Firebase Hosting per `firebase.json`. Two rules:
+  1. **Never edit `build/` by hand.** All source lives in `site/`. Anything you change in `build/` will be overwritten on the next freeze.
+  2. **Don't run `python site/freeze.py` unless the user explicitly asks for it** (e.g., to verify a freezer-only concern like a missing route or broken relative URL). Tests and the dev server (`python site/run.py`) do not need a frozen build. CI runs the freezer on every deploy, so the local `build/` is only for human inspection.
 - `directives/` - SOPs in Markdown (the instruction set)
 - `orchestration/` - Decision guidance
 - `.env` - Environment variables and API keys

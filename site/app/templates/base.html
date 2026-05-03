@@ -30,11 +30,15 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/themes.css') }}">
 
     {% block head %}{% endblock %}
 </head>
 
-<body>
+<body class="{% block body_class %}{{ (variant.theme_class if variant else '')|trim }}{% endblock %}">
+    {% if variant_json %}
+    <script id="variant-config" type="application/json">{{ variant_json|tojson }}</script>
+    {% endif %}
     <div class="app-container">
         {% block content %}{% endblock %}
     </div>

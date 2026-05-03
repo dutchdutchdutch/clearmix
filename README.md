@@ -11,6 +11,8 @@ Mix and measure with confidence.
 
 Clearmix is a web-based calculator that helps users accurately reconstitute peptide vials and calculate precise dosing. The tool guides users through the math of mixing bacteriostatic water with peptide powder and determining the correct syringe draw volume for their prescribed dose.
 
+Two URLs serve two audiences from the same site: **`/`** for research peptides (mcg dosing) and **`/glp1/`** for GLP-1 medications (mg dosing with an mg/mcg toggle). See `directives/PRD.md` § 13 for the variant architecture.
+
 ## Features (v1.0.0)
 
 ### 🛡️ Input Validation & Safety
